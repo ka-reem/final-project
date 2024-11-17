@@ -51,15 +51,12 @@ public class Game extends JFrame {
         JPanel toolbar = new JPanel(new FlowLayout(FlowLayout.LEFT));
         JButton backButton = new JButton("Back to Menu");
         JButton toggleChatButton = new JButton("Toggle Chat");
-        JButton uploadPDFButton = new JButton("Upload Tax PDF");  // Add new button
         
         backButton.addActionListener(e -> returnToMenu());
         toggleChatButton.addActionListener(e -> toggleChat());
-        uploadPDFButton.addActionListener(e -> chatPanel.uploadPDF());  // Add action
         
         toolbar.add(backButton);
         toolbar.add(toggleChatButton);
-        toolbar.add(uploadPDFButton);  // Add to toolbar
         
         // Layout setup
         this.setLayout(new BorderLayout());

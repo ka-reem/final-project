@@ -13,33 +13,33 @@ import javax.swing.text.View;
 import javax.swing.text.ViewFactory;
 
 public class ChatPanel extends JPanel {
-    // Add new style constants
-    private static final Color CHAT_BG_COLOR = new Color(245, 245, 245);
-    private static final Color USER_BUBBLE_COLOR = new Color(0, 132, 255, 230);
-    private static final Color BOT_BUBBLE_COLOR = new Color(240, 240, 240);
-    private static final Color USER_TEXT_COLOR = Color.WHITE;
-    private static final Color BOT_TEXT_COLOR = Color.BLACK;
+    // Update style constants
+    private static final Color CHAT_BG_COLOR = Color.WHITE;
+    private static final Color CHAT_AREA_BG = Color.WHITE;  // Solid white background
+    private static final Color INPUT_BG = Color.WHITE;      // Solid white input
+    private static final Color USER_TEXT_COLOR = new Color(0, 102, 204); // Blue for user text
+    private static final Color BOT_TEXT_COLOR = Color.BLACK;             // Black for AI text
     private static final Font CHAT_FONT = new Font("Arial", Font.PLAIN, 14);
     private static final int BUBBLE_RADIUS = 15;
     private static final int BUBBLE_PADDING = 10;
 
     private GroqClient groqClient;
-    private JTextPane chatArea; // Change to JTextPane for better styling
+    private JTextPane chatArea;
     private JTextField playerInput;
     private String gameContext;
     private ArrayList<String> messages;
-    private TaxData taxData;  // Add this field
-    private PDFReader pdfReader;
-    // Add fields to track quest progress
+    private PDFReader pdfReader;  
+    private String learningTopic = null; 
+    // Track quest progress // Not working
     private int currentQuest = 0;
     private boolean[] questsCompleted = new boolean[5];
     private StringBuilder currentResponse = new StringBuilder();
 
     public ChatPanel() {
-        setOpaque(true);
-        setBackground(CHAT_BG_COLOR);
+        setOpaque(false); // Make panel transparent
         setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
+        pdfReader = new PDFReader();  // Initialize PDFReader
         initializeComponents();
         setupListeners();
         startChat();
@@ -48,11 +48,9 @@ public class ChatPanel extends JPanel {
     private void initializeComponents() {
         String apiKey = loadApiKey();
         groqClient = new GroqClient(apiKey);
-        taxData = new TaxData();
-        pdfReader = new PDFReader();
         
-        // Initialize game context
-        gameContext = "You are a friendly tax guide in a desert town..."; // Your existing context string
+        // Update game context to be topic-neutral
+        gameContext = "You are a friendly guide in a desert town. Your role is to help the player learn any topic they choose through an adventure-based journey."; 
         
         setLayout(new BorderLayout(10, 10));
         setPreferredSize(new Dimension(300, 400));
@@ -62,26 +60,47 @@ public class ChatPanel extends JPanel {
         chatArea = new JTextPane();
         setupChatArea();
         JScrollPane scrollPane = new JScrollPane(chatArea);
+        scrollPane.setOpaque(true);
+        scrollPane.getViewport().setOpaque(true);
         scrollPane.setBorder(BorderFactory.createEmptyBorder());
+        scrollPane.getViewport().setBackground(new Color(0, 0, 0, 0));
         
         // Input area setup
         playerInput = new JTextField();
         playerInput.setFont(CHAT_FONT);
-        JButton submitButton = createStyledButton("Submit", new Color(0, 132, 255));
+        playerInput.setOpaque(true);
+        playerInput.setBackground(INPUT_BG);
+        playerInput.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(200, 200, 200, 100)),
+            BorderFactory.createEmptyBorder(5, 5, 5, 5)
+        ));
+
+        JButton submitButton = createStyledButton("Submit", new Color(0, 132, 255, 160));
         
         JPanel inputPanel = new JPanel(new BorderLayout(5, 5));
+        inputPanel.setOpaque(false);
         inputPanel.add(playerInput, BorderLayout.CENTER);
         inputPanel.add(submitButton, BorderLayout.EAST);
         
-        // Upload button setup
-        JButton uploadButton = new JButton("Upload Tax Document");
+        // Update upload button text to be more general
+        JButton uploadButton = new JButton("Upload Learning Material");
+        uploadButton.setOpaque(false);
+        uploadButton.setBackground(new Color(255, 255, 255, 160));
         JPanel topPanel = new JPanel(new FlowLayout());
+        topPanel.setOpaque(false);
         topPanel.add(uploadButton);
         
         // Add components
         add(scrollPane, BorderLayout.CENTER);
         add(inputPanel, BorderLayout.SOUTH);
         add(topPanel, BorderLayout.NORTH);
+
+        // Make all panels transparent
+        for (Component c : getComponents()) {
+            if (c instanceof JPanel) {
+                ((JPanel)c).setOpaque(false);
+            }
+        }
     }
 
     private void setupListeners() {
@@ -112,11 +131,21 @@ public class ChatPanel extends JPanel {
 
     private void setupChatArea() {
         chatArea.setOpaque(true);
-        chatArea.setBackground(Color.WHITE);
+        chatArea.setBackground(CHAT_AREA_BG);
         chatArea.setEditable(false);
-        // Replace JTextArea methods with JTextPane equivalents
-        ((StyledDocument)chatArea.getDocument()).putProperty(DefaultEditorKit.EndOfLineStringProperty, "\n");
         chatArea.setFont(CHAT_FONT);
+        
+        // Simple styles without bubbles
+        Style userStyle = chatArea.addStyle("UserStyle", null);
+        StyleConstants.setForeground(userStyle, USER_TEXT_COLOR);
+        StyleConstants.setBold(userStyle, true);
+        StyleConstants.setLeftIndent(userStyle, 10f);
+        StyleConstants.setSpaceAbove(userStyle, 10f);
+        
+        Style botStyle = chatArea.addStyle("BotStyle", null);
+        StyleConstants.setForeground(botStyle, BOT_TEXT_COLOR);
+        StyleConstants.setLeftIndent(botStyle, 10f);
+        StyleConstants.setSpaceAbove(botStyle, 10f);
     }
 
     private String loadApiKey() {
@@ -145,21 +174,28 @@ public class ChatPanel extends JPanel {
     }
 
     private String buildPrompt(String userInput) {
+        if (learningTopic == null) {
+            return "You are a friendly guide. The player wants to learn something new. " +
+                   "Ask them what topic they'd like to learn about. Be engaging and welcoming.";
+        }
+
         return String.format(
-            "You are a tax guide in the desert. Current context:\n" +
+            "You are a knowledgeable guide helping someone learn about %s. Current context:\n" +
             "Quest Progress: %d/5 completed\n" +
             "Last location: %s\n" +
             "User input: %s\n\n" +
             "Instructions:\n" +
-            "1. Always connect tasks to desert landmarks\n" +
-            "2. Make tax learning fun and adventurous\n" +
+            "1. Connect learning tasks to desert landmarks\n" +
+            "2. Make learning fun and adventurous\n" +
             "3. Give clear directions to next location\n" +
-            "4. Include tax facts with each quest\n" +
+            "4. Include interesting facts about %s with each quest\n" +
             "5. Keep responses under 50 words\n" +
             "6. Use emojis and engaging language",
+            learningTopic,
             getCompletedQuestCount(),
             getCurrentLocation(),
-            userInput
+            userInput,
+            learningTopic
         );
     }
 
@@ -169,10 +205,18 @@ public class ChatPanel extends JPanel {
             appendToChat("\nYou: " + input);
             playerInput.setText("");
             
+            // Check if this is the first input to set the learning topic
+            if (learningTopic == null && !input.startsWith("/")) {
+                learningTopic = input;
+                appendToChat("\nGuide: Great choice! Let's learn about " + learningTopic + 
+                           "! I'll guide you through this adventure of learning. Ready to begin?\n");
+                return;
+            }
+
             try {
                 String prompt = buildPrompt(input);
                 currentResponse = new StringBuilder();
-                appendToChat("\nTax Advisor: ");
+                appendToChat("\nGuide: "); // Changed from "Tax Advisor" to "Guide"
                 
                 groqClient.generateResponseStreaming(prompt, new StreamingCallback() {
                     @Override
@@ -224,8 +268,8 @@ public class ChatPanel extends JPanel {
     private void updateQuestProgress() {
         int completed = getCompletedQuestCount();
         if (completed == questsCompleted.length) {
-            appendToChat("🎉 Congratulations! You've completed all tax learning quests! " +
-                "You're now ready to handle your taxes with confidence! Would you like to review what you've learned?");
+            appendToChat("🎉 Congratulations! You've completed all learning quests about " + 
+                learningTopic + "! Would you like to review what you've learned?");
         }
     }
 
@@ -248,33 +292,16 @@ public class ChatPanel extends JPanel {
         }
     }
 
-    public void uploadPDF() {  // Change from private to public
-        JFileChooser fileChooser = new JFileChooser();
-        fileChooser.setFileFilter(new javax.swing.filechooser.FileFilter() {
-            public boolean accept(File f) {
-                return f.getName().toLowerCase().endsWith(".pdf") || f.isDirectory();
-            }
-            public String getDescription() {
-                return "PDF Files (*.pdf)";
-            }
-        });
-
-        if (fileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
-            try {
-                String content = pdfReader.readPDF(fileChooser.getSelectedFile());
-                gameContext = "You are a tax advisor. Using this tax document: " + content + 
-                            "\nAsk relevant questions to help fill out the tax form. Keep responses under 50 words.";
-                appendToChat("Tax Advisor: I've reviewed your tax document. Let me help you fill out the form.");
-            } catch (IOException ex) {
-                appendToChat("Error reading PDF: " + ex.getMessage());
-            }
-        }
-    }
-
     private void appendToChat(String text) {
         try {
             StyledDocument doc = chatArea.getStyledDocument();
-            doc.insertString(doc.getLength(), text + "\n", null);
+            boolean isUser = text.startsWith("You:");
+            Style style = chatArea.getStyle(isUser ? "UserStyle" : "BotStyle");
+            
+            // Add newlines for spacing
+            text = text + "\n\n";
+            
+            doc.insertString(doc.getLength(), text, style);
             chatArea.setCaretPosition(doc.getLength());
         } catch (BadLocationException e) {
             e.printStackTrace();
@@ -291,5 +318,38 @@ public class ChatPanel extends JPanel {
         } catch (BadLocationException e) {
             e.printStackTrace();
         }
+    }
+
+    public void uploadPDF() {
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setFileFilter(new javax.swing.filechooser.FileFilter() {
+            public boolean accept(File f) {
+                return f.getName().toLowerCase().endsWith(".pdf") || f.isDirectory();
+            }
+            public String getDescription() {
+                return "PDF Files (*.pdf)";
+            }
+        });
+
+        if (fileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
+            try {
+                String content = pdfReader.readPDF(fileChooser.getSelectedFile());
+                gameContext = String.format(
+                    "You are a knowledgeable guide. Using this learning material: %s\n" +
+                    "Help the user understand the content through an interactive adventure.\n" +
+                    "Ask relevant questions and create engaging learning activities.\n" +
+                    "Keep responses under 50 words.", content);
+                appendToChat("Guide: I've reviewed your document. Let me help you learn from it!");
+            } catch (IOException ex) {
+                appendToChat("Error reading PDF: " + ex.getMessage());
+            }
+        }
+    }
+
+    @Override
+    protected void paintComponent(Graphics g) {
+        super.paintComponent(g);
+        g.setColor(CHAT_BG_COLOR);
+        g.fillRect(0, 0, getWidth(), getHeight());
     }
 }
