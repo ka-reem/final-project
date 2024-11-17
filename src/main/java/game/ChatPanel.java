@@ -33,6 +33,7 @@ public class ChatPanel extends JPanel {
     // Add fields to track quest progress
     private int currentQuest = 0;
     private boolean[] questsCompleted = new boolean[5];
+    private StringBuilder currentResponse = new StringBuilder();
 
     public ChatPanel() {
         setOpaque(true);
@@ -170,20 +171,53 @@ public class ChatPanel extends JPanel {
             
             try {
                 String prompt = buildPrompt(input);
-                String response = groqClient.generateResponse(prompt);
-                appendToChat("\nTax Advisor: " + response);
+                currentResponse = new StringBuilder();
+                appendToChat("\nTax Advisor: ");
                 
-                // Check for quest completion keywords
-                if (response.toLowerCase().contains("completed") || 
-                    response.toLowerCase().contains("well done") ||
-                    response.toLowerCase().contains("congratulations")) {
-                    questsCompleted[currentQuest] = true;
-                    currentQuest++;
-                    updateQuestProgress();
-                }
+                groqClient.generateResponseStreaming(prompt, new StreamingCallback() {
+                    @Override
+                    public void onToken(String token) {
+                        SwingUtilities.invokeLater(() -> {
+                            currentResponse.append(token);
+                            appendToCurrentResponse(token);
+                        });
+                    }
+
+                    @Override
+                    public void onComplete() {
+                        SwingUtilities.invokeLater(() -> {
+                            appendToChat("\n");
+                            String response = currentResponse.toString();
+                            if (response.toLowerCase().contains("completed") || 
+                                response.toLowerCase().contains("well done") ||
+                                response.toLowerCase().contains("congratulations")) {
+                                questsCompleted[currentQuest] = true;
+                                currentQuest++;
+                                updateQuestProgress();
+                            }
+                        });
+                    }
+
+                    @Override
+                    public void onError(Throwable t) {
+                        SwingUtilities.invokeLater(() -> {
+                            appendToChat("\nError: " + t.getMessage());
+                        });
+                    }
+                });
             } catch (Exception e) {
                 appendToChat("\nError: " + e.getMessage());
             }
+        }
+    }
+
+    private void appendToCurrentResponse(String text) {
+        try {
+            StyledDocument doc = chatArea.getStyledDocument();
+            doc.insertString(doc.getLength(), text, null);
+            chatArea.setCaretPosition(doc.getLength());
+        } catch (BadLocationException e) {
+            e.printStackTrace();
         }
     }
 

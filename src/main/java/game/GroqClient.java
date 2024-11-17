@@ -3,6 +3,7 @@ package game;
 import okhttp3.*;
 import com.google.gson.Gson;
 import java.io.IOException;
+import java.io.BufferedReader;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonArray;
@@ -71,5 +72,69 @@ public class GroqClient {
             e.printStackTrace();
         }
         return "Error processing response";
+    }
+
+    public void generateResponseStreaming(String prompt, StreamingCallback callback) {
+        JsonObject requestBody = new JsonObject();
+        requestBody.addProperty("model", "llama3-70b-8192");
+        requestBody.addProperty("stream", true);
+        
+        JsonArray messages = new JsonArray();
+        JsonObject message = new JsonObject();
+        message.addProperty("role", "user");
+        message.addProperty("content", prompt);
+        messages.add(message);
+        requestBody.add("messages", messages);
+
+        RequestBody body = RequestBody.create(
+            gson.toJson(requestBody),
+            MediaType.parse("application/json; charset=utf-8")
+        );
+
+        Request request = new Request.Builder()
+            .url(GROQ_API_URL)
+            .post(body)
+            .addHeader("Authorization", "Bearer " + apiKey)
+            .addHeader("Content-Type", "application/json")
+            .build();
+
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                callback.onError(e);
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                try (ResponseBody responseBody = response.body()) {
+                    if (!response.isSuccessful()) {
+                        callback.onError(new IOException("Request failed: " + response.code()));
+                        return;
+                    }
+
+                    BufferedReader reader = new BufferedReader(responseBody.charStream());
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        if (line.startsWith("data: ")) {
+                            String json = line.substring(6);
+                            if (json.equals("[DONE]")) {
+                                callback.onComplete();
+                                continue;
+                            }
+                            JsonObject chunk = gson.fromJson(json, JsonObject.class);
+                            JsonArray choices = chunk.getAsJsonArray("choices");
+                            if (choices != null && choices.size() > 0) {
+                                JsonObject choice = choices.get(0).getAsJsonObject();
+                                JsonObject delta = choice.getAsJsonObject("delta");
+                                if (delta.has("content")) {
+                                    String content = delta.get("content").getAsString();
+                                    callback.onToken(content);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        });
     }
 }

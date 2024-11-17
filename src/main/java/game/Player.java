@@ -16,8 +16,8 @@ public class Player{
     private float vy;
     private float angle;
 
-    private float R = 5;
-    private float ROTATIONSPEED = 3.0f;
+    private float R = 4; // Originally set to 5
+    private float ROTATIONSPEED = 2.5f; // Originally set to 3
 
     private BufferedImage img;
     private boolean UpPressed;
