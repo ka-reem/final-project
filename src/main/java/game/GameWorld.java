@@ -209,47 +209,36 @@ public class GameWorld extends JPanel implements Runnable {
         // Center the tank by accounting for its size
         float startX = (GameConstants.GAME_SCREEN_WIDTH - t1img.getWidth()) / 2f;
         float startY = (GameConstants.GAME_SCREEN_HEIGHT - t1img.getHeight()) / 2f;
-        t1 = new Player(startX, startY, 0, 0, (short) 0, t1img);
         
+        // Create images for game objects first
+        BufferedImage npc1Img = new BufferedImage(20, 20, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g2d = npc1Img.createGraphics();
+        g2d.setColor(Color.BLUE);
+        g2d.fillOval(0, 0, 20, 20);
+        g2d.dispose();
+        
+        BufferedImage npc2Img = new BufferedImage(20, 20, BufferedImage.TYPE_INT_ARGB);
+        g2d = npc2Img.createGraphics();
+        g2d.setColor(Color.GREEN);
+        g2d.fillOval(0, 0, 20, 20);
+        g2d.dispose();
+        
+        BufferedImage landmark1Img = new BufferedImage(30, 30, BufferedImage.TYPE_INT_ARGB);
+        g2d = landmark1Img.createGraphics();
+        g2d.setColor(Color.YELLOW);
+        g2d.fillOval(0, 0, 30, 30);
+        g2d.dispose();
+
+        // Then create game objects
+        t1 = new Player(startX, startY, t1img);
+        npc1 = new NPC(GameConstants.GAME_SCREEN_WIDTH / 4f, GameConstants.GAME_SCREEN_HEIGHT / 3f, npc1Img, "Hello!");
+        npc2 = new NPC(GameConstants.GAME_SCREEN_WIDTH * 3f / 4f, GameConstants.GAME_SCREEN_HEIGHT * 2f / 3f, npc2Img, "Welcome!");
+        landmark1 = new Landmark(GameConstants.GAME_SCREEN_WIDTH / 4f, GameConstants.GAME_SCREEN_HEIGHT / 4f, landmark1Img, new minigame1());
+
+        // Setup controls
         PlayerControl tc1 = new PlayerControl(t1, KeyEvent.VK_W, KeyEvent.VK_S, KeyEvent.VK_A, KeyEvent.VK_D, KeyEvent.VK_SPACE);
-        this.frame.addKeyListener(tc1);  
-        this.addKeyListener(tc1);  // Add key listener to panel as well
-
-        // Create NPCs with more spacing
-        try {
-            // Create first NPC (blue) - Tax Guide near the hut
-            BufferedImage npc1Img = new BufferedImage(20, 20, BufferedImage.TYPE_INT_ARGB);
-            Graphics2D g2d = npc1Img.createGraphics();
-            g2d.setColor(Color.BLUE);
-            g2d.fillOval(0, 0, 20, 20);
-            g2d.dispose();
-            
-            // Position NPC1 near the hut
-            npc1 = new NPC(GameConstants.GAME_SCREEN_WIDTH / 4, GameConstants.GAME_SCREEN_HEIGHT / 3, npc1Img);
-            
-            // Create second NPC (green) - Tax Explorer near the water
-            BufferedImage npc2Img = new BufferedImage(20, 20, BufferedImage.TYPE_INT_ARGB);
-            g2d = npc2Img.createGraphics();
-            g2d.setColor(Color.GREEN);
-            g2d.fillOval(0, 0, 20, 20);
-            g2d.dispose();
-            
-            // Position NPC2 near the water
-            npc2 = new NPC(GameConstants.GAME_SCREEN_WIDTH * 3 / 4, GameConstants.GAME_SCREEN_HEIGHT * 2 / 3, npc2Img);
-
-            // Creat our first Landmark - Yellow
-            BufferedImage landmark1Img = new BufferedImage(30, 30, BufferedImage.TYPE_INT_ARGB);
-            g2d = landmark1Img.createGraphics();
-            g2d.setColor(Color.YELLOW);
-            g2d.fillOval(0, 0, 30, 30);
-            g2d.dispose();
-            
-            // Position Landmark1
-            landmark1 = new Landmark(GameConstants.GAME_SCREEN_WIDTH / 4, GameConstants.GAME_SCREEN_HEIGHT / 4, landmark1Img);
-
-        } catch (Exception ex) {
-            System.out.println("Error creating NPCs: " + ex.getMessage());
-        }
+        this.frame.addKeyListener(tc1);
+        this.addKeyListener(tc1);
     }
 
     private BufferedImage createDefaultBackground() {
@@ -304,10 +293,10 @@ public class GameWorld extends JPanel implements Runnable {
         buffer.translate(-viewportX, -viewportY);
         
         // Draw game objects
-        this.t1.drawImage(buffer);
-        this.npc1.drawImage(buffer);
-        this.npc2.drawImage(buffer);
-        this.landmark1.drawImage(buffer); // Draw landmark
+        this.t1.draw((Graphics2D)buffer);
+        this.npc1.draw((Graphics2D)buffer);
+        this.npc2.draw((Graphics2D)buffer);
+        this.landmark1.draw((Graphics2D)buffer);
         
         buffer.setTransform(old);
         buffer.dispose();

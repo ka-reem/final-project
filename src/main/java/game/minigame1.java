@@ -5,7 +5,7 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
-public class minigame1 extends JFrame {
+public class minigame1 extends JFrame implements Minigame {
     private int score = 0;
     private JLabel scoreLabel;
     private JButton button;
@@ -28,6 +28,11 @@ public class minigame1 extends JFrame {
             }
         });
         add(button);
+    }
+
+    @Override
+    public void start() {
+        startGame();
     }
 
     public void startGame() {

@@ -1,39 +1,31 @@
-
 package game;
 
 import java.awt.*;
-import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
-import java.awt.Rectangle;
 
-public class NPC {
-    private float x;
-    private float y;
-    private BufferedImage img;
-    private Rectangle hitbox;
-    private static final int INTERACTION_DISTANCE = 50;
+public class NPC extends InteractiveObject {
+    private String dialog;
 
-    public NPC(float x, float y, BufferedImage img) {
-        this.x = x;
-        this.y = y;
-        this.img = img;
-        this.hitbox = new Rectangle((int)x, (int)y, img.getWidth(), img.getHeight());
+    public NPC(float x, float y, BufferedImage sprite, String dialog) {
+        super(x, y, sprite);
+        this.dialog = dialog;
     }
 
-    public boolean isPlayerInRange(Player player) {
-        double distance = Math.sqrt(
-            Math.pow(player.getX() - x, 2) + 
-            Math.pow(player.getY() - y, 2)
-        );
-        return distance < INTERACTION_DISTANCE;
+    @Override
+    public void update() {
+        // NPC behavior updates
     }
 
-    public void drawImage(Graphics g) {
-        Graphics2D g2d = (Graphics2D) g;
-        g2d.drawImage(this.img, (int)x, (int)y, null);
-        
+    @Override
+    public void draw(Graphics2D g2d) {
+        g2d.drawImage(sprite, (int)x, (int)y, null);
         // Debug hitbox
         g2d.setColor(Color.GREEN);
-        g2d.drawRect((int)x, (int)y, this.img.getWidth(), this.img.getHeight());
+        g2d.drawRect((int)x, (int)y, sprite.getWidth(), sprite.getHeight());
+    }
+
+    @Override
+    public void interact() {
+        // Trigger dialog
     }
 }
