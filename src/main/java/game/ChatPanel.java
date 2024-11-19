@@ -189,7 +189,7 @@ public class ChatPanel extends JPanel {
             "2. Make learning fun and adventurous\n" +
             "3. Give clear directions to next location\n" +
             "4. Include interesting facts about %s with each quest\n" +
-            "5. Keep responses under 50 words\n" +
+            "5. Keep responses under 30 words\n" +
             "6. Use emojis and engaging language",
             learningTopic,
             getCompletedQuestCount(),
@@ -338,7 +338,7 @@ public class ChatPanel extends JPanel {
                     "You are a knowledgeable guide. Using this learning material: %s\n" +
                     "Help the user understand the content through an interactive adventure.\n" +
                     "Ask relevant questions and create engaging learning activities.\n" +
-                    "Keep responses under 50 words.", content);
+                    "Keep responses under 30 words.", content);
                 appendToChat("Guide: I've reviewed your document. Let me help you learn from it!");
             } catch (IOException ex) {
                 appendToChat("Error reading PDF: " + ex.getMessage());

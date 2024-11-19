@@ -20,9 +20,11 @@ public class GameWorld extends JPanel implements Runnable {
     private long tick = 0;
     private NPC npc1;  // rename from npc to npc1
     private NPC npc2;  // add second NPC
+    private Landmark landmark1; // Add landmark object
     private Game game;  // Add reference to main game
     private boolean isNearNPC1 = false;  // Add separate flags for each NPC
     private boolean isNearNPC2 = false;
+    private boolean isNearLandmark1 = false;  // Add this field
 
     // Add viewport tracking
     private int viewportX = 0;
@@ -96,12 +98,15 @@ public class GameWorld extends JPanel implements Runnable {
                 // Check both NPCs interaction
                 boolean nearNPC1 = npc1.isPlayerInRange(t1);
                 boolean nearNPC2 = npc2.isPlayerInRange(t1);
+                boolean nearLandmark1 = landmark1.isPlayerInRange(t1); // Check landmark interaction
                 
+
+                // Prevents objects from infinitely detecting interaction
                 // Handle NPC1 interaction
                 if (nearNPC1 != isNearNPC1) {
                     isNearNPC1 = nearNPC1;
                     if (isNearNPC1) {
-                        game.showNPCChat("Tax Advisor 1: Hello! I can help you file your personal income taxes.");
+                        game.showNPCChat("NPC 2: Hello!");
                     }
                 }
                 
@@ -109,7 +114,15 @@ public class GameWorld extends JPanel implements Runnable {
                 if (nearNPC2 != isNearNPC2) {
                     isNearNPC2 = nearNPC2;
                     if (isNearNPC2) {
-                        game.showNPCChat("Tax Advisor 2: Greetings! Need help with business tax deductions?");
+                        game.showNPCChat("NPC 2: Hello!");
+                    }
+                }
+                
+                // Handle Landmark interaction
+                if (nearLandmark1 != isNearLandmark1) {
+                    isNearLandmark1 = nearLandmark1;
+                    if (isNearLandmark1) {
+                        landmark1.activateMinigame();
                     }
                 }
                 
@@ -223,6 +236,17 @@ public class GameWorld extends JPanel implements Runnable {
             
             // Position NPC2 near the water
             npc2 = new NPC(GameConstants.GAME_SCREEN_WIDTH * 3 / 4, GameConstants.GAME_SCREEN_HEIGHT * 2 / 3, npc2Img);
+
+            // Creat our first Landmark - Yellow
+            BufferedImage landmark1Img = new BufferedImage(30, 30, BufferedImage.TYPE_INT_ARGB);
+            g2d = landmark1Img.createGraphics();
+            g2d.setColor(Color.YELLOW);
+            g2d.fillOval(0, 0, 30, 30);
+            g2d.dispose();
+            
+            // Position Landmark1
+            landmark1 = new Landmark(GameConstants.GAME_SCREEN_WIDTH / 4, GameConstants.GAME_SCREEN_HEIGHT / 4, landmark1Img);
+
         } catch (Exception ex) {
             System.out.println("Error creating NPCs: " + ex.getMessage());
         }
@@ -283,6 +307,7 @@ public class GameWorld extends JPanel implements Runnable {
         this.t1.drawImage(buffer);
         this.npc1.drawImage(buffer);
         this.npc2.drawImage(buffer);
+        this.landmark1.drawImage(buffer); // Draw landmark
         
         buffer.setTransform(old);
         buffer.dispose();
