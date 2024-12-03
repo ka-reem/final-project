@@ -25,6 +25,7 @@ public class GameWorld extends JPanel implements Runnable {
     private boolean isNearNPC1 = false;  // Add separate flags for each NPC
     private boolean isNearNPC2 = false;
     private boolean isNearLandmark1 = false;  // Add this field
+    private boolean firstNPCInteraction = true; // Add this field
 
     // Add viewport tracking
     private int viewportX = 0;
@@ -106,7 +107,12 @@ public class GameWorld extends JPanel implements Runnable {
                 if (nearNPC1 != isNearNPC1) {
                     isNearNPC1 = nearNPC1;
                     if (isNearNPC1) {
-                        game.showNPCChat("NPC 2: Hello!");
+                        if (firstNPCInteraction) {
+                            game.showNPCChat("Hello! Write a topic to learn about.");
+                            firstNPCInteraction = false;
+                        } else {
+                            game.showNPCChat("Hello!");
+                        }
                     }
                 }
                 
@@ -114,7 +120,12 @@ public class GameWorld extends JPanel implements Runnable {
                 if (nearNPC2 != isNearNPC2) {
                     isNearNPC2 = nearNPC2;
                     if (isNearNPC2) {
-                        game.showNPCChat("NPC 2: Hello!");
+                        if (firstNPCInteraction) {
+                            game.showNPCChat("Hello! Write a topic to learn about.");
+                            firstNPCInteraction = false;
+                        } else {
+                            game.showNPCChat("Hello!"); 
+                        }
                     }
                 }
                 
