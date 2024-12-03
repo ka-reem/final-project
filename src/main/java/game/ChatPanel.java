@@ -42,7 +42,7 @@ public class ChatPanel extends JPanel {
         pdfReader = new PDFReader();  // Initialize PDFReader
         initializeComponents();
         setupListeners();
-        startChat();
+        // startChat(); // Commented out - chat will start through NPC interaction instead
     }
 
     private void initializeComponents() {
@@ -163,6 +163,7 @@ public class ChatPanel extends JPanel {
         }
     }
 
+    /*
     private void startChat() {
         try {
             String startPrompt = gameContext + "\n Ask the user what topic they'd like to learn";
@@ -172,6 +173,7 @@ public class ChatPanel extends JPanel {
             appendToChat("Error starting chat: " + e.getMessage());
         }
     }
+    */
 
     private String buildPrompt(String userInput) {
         if (learningTopic == null) {
@@ -190,8 +192,11 @@ public class ChatPanel extends JPanel {
             "3. Give clear directions to next location\n" +
             "4. Include interesting facts about %s with each quest\n" +
             "5. Keep responses under 30 words\n" +
-            "6. Use emojis and engaging language",
-            learningTopic,
+            "6. Use emojis and engaging language" +
+            "DO NOT HALLUCINATE, DO NOT MAKE THINGS UP",
+
+            
+            learningTopic, // Learning topic takes entire sentence and not a word. Specify this to user. 
             getCompletedQuestCount(),
             getCurrentLocation(),
             userInput,
@@ -208,15 +213,24 @@ public class ChatPanel extends JPanel {
             // Check if this is the first input to set the learning topic
             if (learningTopic == null && !input.startsWith("/")) {
                 learningTopic = input;
-                appendToChat("\nGuide: Great choice! Let's learn about " + learningTopic + 
-                           "! I'll guide you through this adventure of learning. Ready to begin?\n");
+                try {
+                    // Change prompt or only summarize if its long (i.e. if topic = banana, it will summarize banana in 5 words)
+                    String summaryPrompt = "Provide a brief 1-5 word summary of " + input + 
+                                         " that highlights what we'll be learning about.";
+                    String topicSummary = groqClient.generateResponse(summaryPrompt);
+                    
+                    appendToChat("\nGuide: Great choice! Let's learn about, " + 
+                               topicSummary + "\n\nAre you ready to begin this adventure?\n");
+                } catch (Exception e) {
+                    appendToChat("\nError generating topic summary: " + e.getMessage());
+                }
                 return;
             }
 
             try {
                 String prompt = buildPrompt(input);
                 currentResponse = new StringBuilder();
-                appendToChat("\nGuide: "); // Changed from "Tax Advisor" to "Guide"
+                appendToChat("\nGuide: "); 
                 
                 groqClient.generateResponseStreaming(prompt, new StreamingCallback() {
                     @Override
@@ -281,13 +295,15 @@ public class ChatPanel extends JPanel {
         return count;
     }
 
+    // Replace these with landmarks. Landmarks are still WIP.
     private String getCurrentLocation() {
         switch (currentQuest) {
-            case 0: return "starting point";
-            case 1: return "near the hut";
-            case 2: return "by the water";
-            case 3: return "among cactuses";
-            case 4: return "rock formation";
+            case 0: return "Landmark One"; // Says landmark two? 
+            // case 0: return "starting point";
+            // case 1: return "near the hut";
+            // case 2: return "by the water";
+            // case 3: return "among cactuses";
+            // case 4: return "rock formation";
             default: return "on the path";
         }
     }
@@ -320,31 +336,32 @@ public class ChatPanel extends JPanel {
         }
     }
 
-    public void uploadPDF() {
-        JFileChooser fileChooser = new JFileChooser();
-        fileChooser.setFileFilter(new javax.swing.filechooser.FileFilter() {
-            public boolean accept(File f) {
-                return f.getName().toLowerCase().endsWith(".pdf") || f.isDirectory();
-            }
-            public String getDescription() {
-                return "PDF Files (*.pdf)";
-            }
-        });
+    // If time allows, let user upaload a PDF file to learn from
+    // public void uploadPDF() {
+    //     JFileChooser fileChooser = new JFileChooser();
+    //     fileChooser.setFileFilter(new javax.swing.filechooser.FileFilter() {
+    //         public boolean accept(File f) {
+    //             return f.getName().toLowerCase().endsWith(".pdf") || f.isDirectory();
+    //         }
+    //         public String getDescription() {
+    //             return "PDF Files (*.pdf)";
+    //         }
+    //     });
 
-        if (fileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
-            try {
-                String content = pdfReader.readPDF(fileChooser.getSelectedFile());
-                gameContext = String.format(
-                    "You are a knowledgeable guide. Using this learning material: %s\n" +
-                    "Help the user understand the content through an interactive adventure.\n" +
-                    "Ask relevant questions and create engaging learning activities.\n" +
-                    "Keep responses under 30 words.", content);
-                appendToChat("Guide: I've reviewed your document. Let me help you learn from it!");
-            } catch (IOException ex) {
-                appendToChat("Error reading PDF: " + ex.getMessage());
-            }
-        }
-    }
+    //     if (fileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
+    //         try {
+    //             String content = pdfReader.readPDF(fileChooser.getSelectedFile());
+    //             gameContext = String.format(
+    //                 "You are a knowledgeable guide. Using this learning material: %s\n" +
+    //                 "Help the user understand the content through an interactive adventure.\n" +
+    //                 "Ask relevant questions and create engaging learning activities.\n" +
+    //                 "Keep responses under 30 words.", content);
+    //             appendToChat("Guide: I've reviewed your document. Let me help you learn from it!");
+    //         } catch (IOException ex) {
+    //             appendToChat("Error reading PDF: " + ex.getMessage());
+    //         }
+    //     }
+    // }
 
     @Override
     protected void paintComponent(Graphics g) {
