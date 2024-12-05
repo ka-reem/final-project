@@ -35,6 +35,10 @@ public class GameWorld extends JPanel implements Runnable {
     private static final float ZOOM_LEVEL = 1.0f;  // Changed from 0.75f to 1.0f
     private static final int MAP_SCALE = 2;  // Add this constant
 
+    // Add new fields for scaling
+    private double scaleX = 1.0;
+    private double scaleY = 1.0;
+
     public GameWorld(Game game) {
         this.game = game;
         this.frame = game;
@@ -279,6 +283,10 @@ public class GameWorld extends JPanel implements Runnable {
         Graphics2D g2 = (Graphics2D) g;
         Graphics2D buffer = world.createGraphics();
 
+        // Calculate scale factors based on current panel size
+        scaleX = getWidth() / (double)GameConstants.GAME_SCREEN_WIDTH;
+        scaleY = getHeight() / (double)GameConstants.GAME_SCREEN_HEIGHT;
+
         // Enable better rendering
         buffer.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         buffer.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
@@ -286,6 +294,9 @@ public class GameWorld extends JPanel implements Runnable {
         // Clear the background first
         buffer.setColor(Color.BLACK);
         buffer.fillRect(0, 0, world.getWidth(), world.getHeight());
+        
+        // Scale the graphics context
+        g2.scale(scaleX, scaleY);
         
         // Draw visible portion of map
         if (mapBackground != null) {
@@ -311,7 +322,9 @@ public class GameWorld extends JPanel implements Runnable {
         
         buffer.setTransform(old);
         buffer.dispose();
-        g2.drawImage(world, 0, 0, this);
+        
+        // Draw scaled world to screen
+        g2.drawImage(world, 0, 0, GameConstants.GAME_SCREEN_WIDTH, GameConstants.GAME_SCREEN_HEIGHT, null);
     }
 
     // Update player movement to account for scrolling
@@ -342,5 +355,13 @@ public class GameWorld extends JPanel implements Runnable {
         if (t1 != null) {
             t1.resetMovement();
         }
+    }
+
+    // Update mouse/interaction coordinates to account for scaling
+    public Point getScaledPoint(Point original) {
+        return new Point(
+            (int)(original.x / scaleX),
+            (int)(original.y / scaleY)
+        );
     }
 }

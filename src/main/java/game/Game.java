@@ -37,6 +37,9 @@ public class Game extends JFrame {
         this.setTitle("Taxplorer");
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         
+        // Enable resizing
+        this.setResizable(true);
+        
         // Added keyboard input
         this.setFocusable(true);
         this.requestFocus();
@@ -69,10 +72,22 @@ public class Game extends JFrame {
         chatPanel.setPreferredSize(new Dimension(200, GameConstants.GAME_SCREEN_HEIGHT));
         this.add(chatPanel, BorderLayout.EAST);
         
-        // Pack and center the window
+        // Pack and maximize the window
         this.pack();
-        this.setLocationRelativeTo(null);
-        this.setResizable(false);
+        this.setExtendedState(JFrame.MAXIMIZED_BOTH);
+        
+        // Add component listener for resize events
+        this.addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentResized(ComponentEvent e) {
+                gameWorld.setPreferredSize(new Dimension(
+                    getContentPane().getWidth(),
+                    getContentPane().getHeight()
+                ));
+                gameWorld.revalidate();
+                gameWorld.repaint();
+            }
+        });
         
         // Start the game thread
         Thread thread = new Thread(gameWorld);
