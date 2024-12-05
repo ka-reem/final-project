@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Map Generator</title>
+    <style>
+        img {
+            max-width: 100%;
+            height: auto;
+        }
+        .input-container {
+            margin: 20px 0;
+        }
+        textarea {
+            width: 100%;
+            max-width: 500px;
+            height: 100px;
+            margin: 10px 0;
+        }
+        .loading {
+            color: #666;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Map Generator</h1>
+    <div class="input-container">
+        <label for="mapPrompt">Describe your map:</label><br>
+        <textarea id="mapPrompt" placeholder="Write your map here">2d pixel map for a game with a birdseye view. Make it very very simple. use only 4 colors. 2 colors for paths, the player will need space to walk along these paths. 2 for green walls.</textarea>
+    </div>
+    <button id="fetchImage">Generate Map</button>
+    <div id="status"></div>
+    <div id="imageContainer"></div>
+
+    <script>
+        document.getElementById('fetchImage').addEventListener('click', async function() {
+            const statusDiv = document.getElementById('status');
+            const imageContainer = document.getElementById('imageContainer');
+            const prompt = document.getElementById('mapPrompt').value;
+            
+            if (!prompt.trim()) {
+                statusDiv.textContent = 'Please enter a map description';
+                return;
+            }
+            
+            try {
+                statusDiv.textContent = 'Generating map...';
+                imageContainer.innerHTML = '';
+                this.disabled = true;
+                
+                const response = await fetch('/generate-image', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ prompt })
+                });
+
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                
+                const blob = await response.blob();
+                const imageUrl = URL.createObjectURL(blob);
+                imageContainer.innerHTML = `<img src="${imageUrl}" alt="Generated Map">`;
+                statusDiv.textContent = 'Map generated successfully!';
+            } catch (error) {
+                console.error('Error:', error);
+                statusDiv.textContent = `Error: ${error.message}`;
+            } finally {
+                this.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>
