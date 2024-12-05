@@ -204,6 +204,21 @@ public class ChatPanel extends JPanel {
         );
     }
 
+    private String extractLearningTopic(String input) {
+        try {
+            String extractPrompt = "Extract the main learning topic from this text. " +
+                "If the text contains phrases like 'I want to learn', 'help me with', 'study for', etc., " +
+                "identify the subject matter. Return ONLY the topic without any extra words.\n\n" +
+                "Text: \"" + input + "\"";
+            
+            String extractedTopic = groqClient.generateResponse(extractPrompt).trim();
+            return extractedTopic;
+        } catch (Exception e) {
+            appendToChat("\nError extracting topic: " + e.getMessage());
+            return input; // fallback to original input
+        }
+    }
+
     private void processPlayerInput() {
         String input = playerInput.getText().trim();
         if (!input.isEmpty()) {
@@ -212,15 +227,18 @@ public class ChatPanel extends JPanel {
             
             // Check if this is the first input to set the learning topic
             if (learningTopic == null && !input.startsWith("/")) {
-                learningTopic = input;
+                String extractedTopic = extractLearningTopic(input);
+                learningTopic = extractedTopic;
+                
                 try {
-                    // Change prompt or only summarize if its long (i.e. if topic = banana, it will summarize banana in 5 words)
-                    String summaryPrompt = "Provide a brief 1-5 word summary of " + input + 
-                                         " that highlights what we'll be learning about.";
-                    String topicSummary = groqClient.generateResponse(summaryPrompt);
+                    String summaryPrompt = "You are helping someone learn about: " + extractedTopic + 
+                                         "\nProvide an encouraging 1-2 sentence response that:" +
+                                         "\n1. Confirms the topic" +
+                                         "\n2. Shows enthusiasm for teaching it" +
+                                         "\n3. Asks if they're ready to begin";
                     
-                    appendToChat("\nGuide: Great choice! Let's learn about, " + 
-                               topicSummary + "\n\nAre you ready to begin this adventure?\n");
+                    String response = groqClient.generateResponse(summaryPrompt);
+                    appendToChat("\nGuide: " + response + "\n");
                 } catch (Exception e) {
                     appendToChat("\nError generating topic summary: " + e.getMessage());
                 }
