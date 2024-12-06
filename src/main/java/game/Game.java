@@ -33,7 +33,7 @@ public class Game extends JFrame {
     }
     
     public Game() {
-        // Set window properties
+        // Change the name of the game
         this.setTitle("Taxplorer");
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         
@@ -72,9 +72,9 @@ public class Game extends JFrame {
         chatPanel.setPreferredSize(new Dimension(200, GameConstants.GAME_SCREEN_HEIGHT));
         this.add(chatPanel, BorderLayout.EAST);
         
-        // Pack and maximize the window
+        // Pack and center the window
         this.pack();
-        this.setExtendedState(JFrame.MAXIMIZED_BOTH);
+        this.setLocationRelativeTo(null); // Center the window
         
         // Add component listener for resize events
         this.addComponentListener(new ComponentAdapter() {
