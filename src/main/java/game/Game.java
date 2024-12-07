@@ -16,6 +16,7 @@ public class Game extends JFrame {
     private GameWorld gameWorld;
     private ChatPanel chatPanel;
     private boolean isChatVisible = false;
+    private JLayeredPane layeredPane;
 
     private String loadApiKey() {
         Properties props = new Properties();
@@ -50,8 +51,24 @@ public class Game extends JFrame {
                                                GameConstants.GAME_SCREEN_HEIGHT));
         gameWorld.InitializeGame();
         
-        // Create toolbar
+        // Create and add chat panel
+        chatPanel = new ChatPanel();
+        chatPanel.setVisible(false);
+        chatPanel.setPreferredSize(new Dimension(200, GameConstants.GAME_SCREEN_HEIGHT));
+        
+        // Set initial window size before adding components
+        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+        int width = (int)(screenSize.width * 0.8);  // 80% of screen width
+        int height = (int)(screenSize.height * 0.8); // 80% of screen height
+        setPreferredSize(new Dimension(width, height));
+        
+        // Layout setup
+        layeredPane = new JLayeredPane();
+        setContentPane(layeredPane);
+        
+        // Create toolbar panel
         JPanel toolbar = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        toolbar.setOpaque(false);
         JButton backButton = new JButton("Back to Menu");
         JButton toggleChatButton = new JButton("Toggle Chat");
         
@@ -61,37 +78,47 @@ public class Game extends JFrame {
         toolbar.add(backButton);
         toolbar.add(toggleChatButton);
         
-        // Layout setup
-        this.setLayout(new BorderLayout());
-        this.add(toolbar, BorderLayout.NORTH);
-        this.add(gameWorld, BorderLayout.CENTER);
+        // Initialize component bounds with proper sizes
+        gameWorld.setBounds(0, 0, width, height);
+        toolbar.setBounds(0, 0, width, 40);
+        chatPanel.setBounds(width - 320, 50, 300, height - 100);
         
-        // Create and add chat panel
-        chatPanel = new ChatPanel();
-        chatPanel.setVisible(false);
-        chatPanel.setPreferredSize(new Dimension(200, GameConstants.GAME_SCREEN_HEIGHT));
-        this.add(chatPanel, BorderLayout.EAST);
+        // Add components to layered pane with proper z-order
+        layeredPane.add(gameWorld, JLayeredPane.DEFAULT_LAYER);
+        layeredPane.add(toolbar, JLayeredPane.PALETTE_LAYER);
+        layeredPane.add(chatPanel, JLayeredPane.PALETTE_LAYER);
         
         // Pack and center the window
         this.pack();
         this.setLocationRelativeTo(null); // Center the window
         
-        // Add component listener for resize events
+        // Add resize listener
         this.addComponentListener(new ComponentAdapter() {
             @Override
             public void componentResized(ComponentEvent e) {
-                gameWorld.setPreferredSize(new Dimension(
-                    getContentPane().getWidth(),
-                    getContentPane().getHeight()
-                ));
-                gameWorld.revalidate();
-                gameWorld.repaint();
+                int width = getContentPane().getWidth();
+                int height = getContentPane().getHeight();
+                
+                gameWorld.setBounds(0, 0, width, height);
+                toolbar.setBounds(0, 0, width, 40);
+                chatPanel.setBounds(width - 320, 50, 300, height - 100);
+                
+                layeredPane.revalidate();
+                layeredPane.repaint();
             }
         });
         
         // Start the game thread
         Thread thread = new Thread(gameWorld);
         thread.start();
+    }
+
+    @Override
+    public void setSize(int width, int height) {
+        super.setSize(width, height);
+        if (layeredPane != null) {
+            layeredPane.setBounds(0, 0, width, height);
+        }
     }
 
     private void toggleChat() {

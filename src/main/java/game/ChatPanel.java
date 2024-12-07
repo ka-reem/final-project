@@ -13,13 +13,13 @@ import javax.swing.text.View;
 import javax.swing.text.ViewFactory;
 
 public class ChatPanel extends JPanel {
-    // Update style constants
-    private static final Color CHAT_BG_COLOR = Color.WHITE;
-    private static final Color CHAT_AREA_BG = Color.WHITE;  // Solid white background
-    private static final Color INPUT_BG = Color.WHITE;      // Solid white input
-    private static final Color USER_TEXT_COLOR = new Color(0, 102, 204); // Blue for user text
-    private static final Color BOT_TEXT_COLOR = Color.BLACK;             // Black for AI text
-    private static final Font CHAT_FONT = new Font("Arial", Font.PLAIN, 14);
+    // Update style constants with transparency
+    private static final Color CHAT_BG_COLOR = new Color(30, 30, 30, 180); // 160/255 alpha
+    private static final Color CHAT_AREA_BG = new Color(255, 255, 255, 10);
+    private static final Color INPUT_BG = new Color(255, 255, 255, 20);
+    private static final Color USER_TEXT_COLOR = new Color(255, 255, 255); // Blue for user text
+    private static final Color BOT_TEXT_COLOR = new Color(200, 200, 200);             // Black for AI text
+    private static final Font CHAT_FONT = new Font("SansSerif", Font.PLAIN, 14);
     private static final int BUBBLE_RADIUS = 15;
     private static final int BUBBLE_PADDING = 10;
 
@@ -37,7 +37,8 @@ public class ChatPanel extends JPanel {
 
     public ChatPanel() {
         setOpaque(false); // Make panel transparent
-        setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
+        setBackground(new Color(0, 0, 0, 0));
 
         pdfReader = new PDFReader();  // Initialize PDFReader
         initializeComponents();
@@ -57,23 +58,41 @@ public class ChatPanel extends JPanel {
         messages = new ArrayList<>();
         
         // Chat area setup
-        chatArea = new JTextPane();
+        chatArea = new JTextPane() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(CHAT_AREA_BG);
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 10, 10);
+                super.paintComponent(g);
+                g2.dispose();
+            }
+        };
         setupChatArea();
         JScrollPane scrollPane = new JScrollPane(chatArea);
-        scrollPane.setOpaque(true);
-        scrollPane.getViewport().setOpaque(true);
+        scrollPane.setOpaque(false);
+        scrollPane.getViewport().setOpaque(false);
         scrollPane.setBorder(BorderFactory.createEmptyBorder());
         scrollPane.getViewport().setBackground(new Color(0, 0, 0, 0));
         
         // Input area setup
-        playerInput = new JTextField();
+        playerInput = new JTextField() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(INPUT_BG);
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 10, 10);
+                super.paintComponent(g);
+                g2.dispose();
+            }
+        };
         playerInput.setFont(CHAT_FONT);
-        playerInput.setOpaque(true);
+        playerInput.setOpaque(false);
         playerInput.setBackground(INPUT_BG);
-        playerInput.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(new Color(200, 200, 200, 100)),
-            BorderFactory.createEmptyBorder(5, 5, 5, 5)
-        ));
+        playerInput.setBorder(BorderFactory.createEmptyBorder(8, 12, 8, 12));
+        playerInput.setForeground(Color.WHITE);
 
         JButton submitButton = createStyledButton("Submit", new Color(0, 132, 255, 160));
         
@@ -130,8 +149,8 @@ public class ChatPanel extends JPanel {
     }
 
     private void setupChatArea() {
-        chatArea.setOpaque(true);
-        chatArea.setBackground(CHAT_AREA_BG);
+        chatArea.setOpaque(false);
+        chatArea.setBackground(new Color(0, 0, 0, 0));
         chatArea.setEditable(false);
         chatArea.setFont(CHAT_FONT);
         
@@ -386,8 +405,23 @@ public class ChatPanel extends JPanel {
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
-        g.setColor(CHAT_BG_COLOR);
-        g.fillRect(0, 0, getWidth(), getHeight());
+        Graphics2D g2 = (Graphics2D) g.create();
+        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        
+        // Fill entire background with transparent color
+        g2.setColor(new Color(0, 0, 0, 0));
+        g2.fillRect(0, 0, getWidth(), getHeight());
+        
+        // Create modern blur effect
+        g2.setColor(CHAT_BG_COLOR);
+        g2.fillRoundRect(0, 0, getWidth(), getHeight(), 20, 20);
+        
+        // Add subtle border
+        g2.setColor(new Color(255, 255, 255, 30));
+        g2.setStroke(new BasicStroke(1f));
+        g2.drawRoundRect(0, 0, getWidth()-1, getHeight()-1, 20, 20);
+        
+        g2.dispose();
     }
 
     // Add getter method for learning topic
