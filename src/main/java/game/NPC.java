@@ -25,7 +25,7 @@ public class NPC extends InteractiveObject {
     }
 
     @Override
-    public void interact() {
+    public void interact(Player player) {
         // Trigger dialog
     }
 }

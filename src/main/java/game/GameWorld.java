@@ -137,7 +137,7 @@ public class GameWorld extends JPanel implements Runnable {
                 if (nearLandmark1 != isNearLandmark1) {
                     isNearLandmark1 = nearLandmark1;
                     if (isNearLandmark1) {
-                        landmark1.activateMinigame();
+                        landmark1.activateMinigame(t1);
                     }
                 }
                 

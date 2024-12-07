@@ -211,7 +211,7 @@ public class minigame1 extends JFrame implements Minigame {
         
         // If still no topic after retries
         JOptionPane.showMessageDialog(null, 
-            "Please select a topic in the chat first before starting the minigame.");
+            "You found a lankmark! Please talk to an available NPC to select a topic first.");
         dispose();
     }
 }

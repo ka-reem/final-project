@@ -25,12 +25,12 @@ public class Landmark extends InteractiveObject {
     }
 
     @Override
-    public void interact() {
+    public void interact(Player player) {
+        player.resetMovement();
         minigame.start();
     }
 
-    // Rename activateMinigame to interact to match interface
-    public void activateMinigame() {
-        interact();
+    public void activateMinigame(Player player) {
+        interact(player);
     }
 }

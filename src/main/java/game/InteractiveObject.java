@@ -1,4 +1,3 @@
-
 package game;
 
 import java.awt.image.BufferedImage;
@@ -18,5 +17,5 @@ public abstract class InteractiveObject extends GameObject {
         return distance < INTERACTION_DISTANCE;
     }
 
-    public abstract void interact();
+    public abstract void interact(Player player);
 }
