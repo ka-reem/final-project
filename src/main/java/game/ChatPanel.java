@@ -205,6 +205,7 @@ public class ChatPanel extends JPanel {
     }
 
     private String extractLearningTopic(String input) {
+        // In the future we can add something to check if user wants to change the learning topic
         try {
             String extractPrompt = "Extract the main learning topic from this text. " +
                 "If the text contains phrases like 'I want to learn', 'help me with', 'study for', etc., " +
@@ -229,7 +230,8 @@ public class ChatPanel extends JPanel {
             if (learningTopic == null && !input.startsWith("/")) {
                 String extractedTopic = extractLearningTopic(input);
                 learningTopic = extractedTopic;
-                
+                // Add this line to save the topic to TopicManager
+                TopicManager.getInstance().setTopic(extractedTopic);
                 try {
                     String summaryPrompt = "You are helping someone learn about: " + extractedTopic + 
                                          "\nProvide an encouraging 1-2 sentence response that:" +
@@ -386,5 +388,11 @@ public class ChatPanel extends JPanel {
         super.paintComponent(g);
         g.setColor(CHAT_BG_COLOR);
         g.fillRect(0, 0, getWidth(), getHeight());
+    }
+
+    // Add getter method for learning topic
+    // Call this in Minigames
+    public String getLearningTopic() {
+        return learningTopic;
     }
 }
