@@ -21,3 +21,7 @@ build/
 *.swp
 *.swo
 .DS_Store
+
+# Config files
+config.properties
+*.png
