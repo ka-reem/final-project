@@ -20,10 +20,14 @@ dependencies {
     implementation 'com.google.code.gson:gson:2.10.1'
     // PDFBox for PDF processing
     implementation 'org.apache.pdfbox:pdfbox:2.0.29'
+    // LMNT for text-to-speech
+    implementation 'com.squareup.okhttp3:okhttp:4.10.0'
+    // LMNT: for mp3
+    implementation 'javazoom:jlayer:1.0.1'  
 }
 
 application {
-    mainClass = 'game.Game'  // Update to point to the main Game class
+    mainClass = 'game.Game'  // Update to point to the main Game class // previously is game.Game
 }
 
 jar {
@@ -55,6 +59,60 @@ task release(type: Copy) {
     from jar.archiveFile
     from configurations.runtimeClasspath
     into "$buildDir/release"
+}
+
+tasks.register('createAudioDir') {
+    doLast {
+        mkdir "${projectDir}/audio"
+    }
+}
+
+tasks.register('createVenv') {
+    dependsOn 'createGitignore'
+    doLast {
+        exec {
+            commandLine 'python3', '-m', 'venv', "${projectDir}/venv"
+        }
+        
+        // Create .env file with LMNT API key
+        def envFile = new File("${projectDir}/.env")
+        if (!envFile.exists()) {
+            envFile << "LMNT_API_KEY=${project.hasProperty('lmntApiKey') ? project.lmntApiKey : System.getenv('LMNT_API_KEY')}"
+        }
+        
+        // Install dependencies in venv
+        if (System.properties['os.name'].toLowerCase().contains('windows')) {
+            exec {
+                commandLine "${projectDir}/venv/Scripts/pip", 'install', 'lmnt', 'python-dotenv'
+            }
+        } else {
+            exec {
+                commandLine "${projectDir}/venv/bin/pip", 'install', 'lmnt', 'python-dotenv'
+            }
+        }
+    }
+}
+
+// Update the run task to only depend on the necessary tasks
+tasks.named('run') {
+    dependsOn 'createAudioDir'
+    dependsOn 'createVenv'
+}
+
+// Add .gitignore entry for venv and audio directories
+tasks.register('createGitignore') {
+    doLast {
+        def gitignore = new File("${projectDir}/.gitignore")
+        if (!gitignore.exists()) {
+            gitignore.text = """
+venv/
+audio/
+*.mp3
+"""
+        } else if (!gitignore.text.contains("venv/")) {
+            gitignore.append("\nvenv/\naudio/\n*.mp3\n")
+        }
+    }
 }
 
 

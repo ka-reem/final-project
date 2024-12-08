@@ -9,19 +9,32 @@ import javax.imageio.ImageIO;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 import javax.swing.text.*;
-import javax.swing.text.View;
-import javax.swing.text.ViewFactory;
+import javax.sound.sampled.*;
+import javazoom.jl.player.Player;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 
 public class ChatPanel extends JPanel {
-    // Update style constants with transparency
+    // Add new constant for venv path
+    private static final String VENV_PATH = new File("venv").getAbsolutePath();
+    // Update constants
+    private static final String AUDIO_DIR = "audio/";
+    private static final String PYTHON_SCRIPT = "/lmnt_tts.py";
     private static final Color CHAT_BG_COLOR = new Color(30, 30, 30, 180); // 160/255 alpha
     private static final Color CHAT_AREA_BG = new Color(255, 255, 255, 10);
     private static final Color INPUT_BG = new Color(255, 255, 255, 20);
-    private static final Color USER_TEXT_COLOR = new Color(255, 255, 255); // Blue for user text
+    private static final Color USER_TEXT_COLOR = new Color(255, 255, 255); // Not working properly
     private static final Color BOT_TEXT_COLOR = new Color(200, 200, 200);             // Black for AI text
     private static final Font CHAT_FONT = new Font("SansSerif", Font.PLAIN, 14);
     private static final int BUBBLE_RADIUS = 15;
     private static final int BUBBLE_PADDING = 10;
+    private int audioCounter = 0;
+    private ExecutorService audioExecutor = Executors.newSingleThreadExecutor();
 
     private GroqClient groqClient;
     private JTextPane chatArea;
@@ -277,21 +290,30 @@ public class ChatPanel extends JPanel {
                         SwingUtilities.invokeLater(() -> {
                             currentResponse.append(token);
                             appendToCurrentResponse(token);
+                            // Change generateSpeech to generateAndPlaySpeech
+                            if (token.matches(".*[.!?]\\s*")) {
+                                String sentence = currentResponse.toString().trim();
+                                generateAndPlaySpeech(sentence);
+                                currentResponse.setLength(0);
+                            }
                         });
                     }
 
                     @Override
                     public void onComplete() {
                         SwingUtilities.invokeLater(() -> {
+                            String finalResponse = currentResponse.toString().trim();
+                            generateAndPlaySpeech(finalResponse);
                             appendToChat("\n");
-                            String response = currentResponse.toString();
-                            if (response.toLowerCase().contains("completed") || 
-                                response.toLowerCase().contains("well done") ||
-                                response.toLowerCase().contains("congratulations")) {
+                            
+                            if (finalResponse.toLowerCase().contains("completed") || 
+                                finalResponse.toLowerCase().contains("well done") ||
+                                finalResponse.toLowerCase().contains("congratulations")) {
                                 questsCompleted[currentQuest] = true;
                                 currentQuest++;
                                 updateQuestProgress();
                             }
+                            currentResponse.setLength(0);
                         });
                     }
 
@@ -428,5 +450,91 @@ public class ChatPanel extends JPanel {
     // Call this in Minigames
     public String getLearningTopic() {
         return learningTopic;
+    }
+
+    private void generateAndPlaySpeech(String text) {
+        try {
+            // Create audio directory if it doesn't exist
+            new File(AUDIO_DIR).mkdirs();
+            
+            String outputFile = AUDIO_DIR + "speech_" + audioCounter++ + ".mp3";
+            String encodedText = URLEncoder.encode(text, StandardCharsets.UTF_8.toString());
+            
+            // Get the script from resources
+            InputStream resourceStream = getClass().getResourceAsStream(PYTHON_SCRIPT);
+            if (resourceStream == null) {
+                System.err.println("Could not find Python script in resources");
+                return;
+            }
+            
+            // Copy script to temp file
+            File tempScript = File.createTempFile("lmnt_tts", ".py");
+            Files.copy(
+                resourceStream,
+                tempScript.toPath(),
+                StandardCopyOption.REPLACE_EXISTING
+            );
+            tempScript.deleteOnExit();
+            
+            // Use venv python interpreter
+            String pythonPath = System.getProperty("os.name").toLowerCase().contains("windows") 
+                ? VENV_PATH + "/Scripts/python"
+                : VENV_PATH + "/bin/python3";
+
+            ProcessBuilder pb = new ProcessBuilder(
+                pythonPath,
+                tempScript.getAbsolutePath(),
+                encodedText,
+                new File(outputFile).getAbsolutePath()
+            );
+            
+            pb.redirectErrorStream(true);
+            Process process = pb.start();
+            
+            // Read output
+            try (BufferedReader reader = new BufferedReader(
+                    new InputStreamReader(process.getInputStream()))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    System.out.println("Python output: " + line);
+                }
+            }
+            
+            int exitCode = process.waitFor();
+            if (exitCode == 0) {
+                playMP3(outputFile);
+            } else {
+                System.err.println("Python script failed with exit code: " + exitCode);
+            }
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void playMP3(String filepath) {
+        audioExecutor.submit(() -> {
+            try (FileInputStream fis = new FileInputStream(filepath)) {
+                Player player = new Player(fis);
+                player.play();
+                // Only delete after playing is complete
+                new File(filepath).deleteOnExit();
+            } catch (Exception e) {
+                System.err.println("Error playing audio: " + filepath);
+                e.printStackTrace();
+            }
+        });
+    }
+
+    // Add cleanup on window close
+    public void cleanup() {
+        audioExecutor.shutdown();
+        try {
+            if (!audioExecutor.awaitTermination(800, TimeUnit.MILLISECONDS)) {
+                audioExecutor.shutdownNow();
+            }
+        } catch (InterruptedException e) {
+            audioExecutor.shutdownNow();
+        }
     }
 }
