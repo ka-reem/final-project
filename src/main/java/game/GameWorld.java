@@ -207,18 +207,18 @@ public class GameWorld extends JPanel implements Runnable {
             System.out.println("Resource URL: " + resourceUrl);
             BufferedImage originalImg = ImageIO.read(Objects.requireNonNull(resourceUrl));
             
-            // Sprite sizing
-            t1img = new BufferedImage(20, 20, BufferedImage.TYPE_INT_ARGB);
+            // Increase sprite size to 40x40
+            t1img = new BufferedImage(120, 120, BufferedImage.TYPE_INT_ARGB);
             Graphics2D g2d = t1img.createGraphics();
             g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-            g2d.drawImage(originalImg, 0, 0, 20, 20, null);
+            g2d.drawImage(originalImg, 0, 0, 120, 120, null);
             g2d.dispose();
             
         } catch (Exception ex) {
             System.out.println("Error loading tank1.png: " + ex.getMessage());
             ex.printStackTrace();
-            // Default small image if loading fails
-            t1img = new BufferedImage(20, 20, BufferedImage.TYPE_INT_RGB);
+            // Default larger image if loading fails
+            t1img = new BufferedImage(120, 120, BufferedImage.TYPE_INT_RGB);
         }
 
         // Center the tank by accounting for its size

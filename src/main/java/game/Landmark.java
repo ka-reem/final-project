@@ -7,15 +7,41 @@ import java.io.IOException;
 
 public class Landmark extends InteractiveObject {
     private Minigame minigame;
+    private static BufferedImage defaultSprite;
+
+    static {
+        // Create a default 32x32 placeholder sprite
+        defaultSprite = new BufferedImage(32, 32, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g = defaultSprite.createGraphics();
+        g.setColor(Color.GRAY);
+        g.fillRect(0, 0, 32, 32);
+        g.dispose();
+    }
 
     public Landmark(float x, float y, BufferedImage sprite, Minigame minigame) {
-        super(x, y, loadLandmarkSprite());
+        super(x, y, defaultSprite); // Start with default sprite
         this.minigame = minigame;
+    }
+
+    @Override
+    public void update() {
+        // Try to load the landmark image if it exists
+        try {
+            BufferedImage newSprite = loadLandmarkSprite();
+            if (newSprite != null && newSprite != this.sprite) {
+                this.sprite = newSprite;
+                // Update hitbox for new sprite size
+                this.hitbox = new Rectangle((int)x, (int)y, sprite.getWidth(), sprite.getHeight());
+            }
+        } catch (Exception e) {
+            // If image isn't available yet, keep using default sprite
+        }
     }
 
     private static BufferedImage loadLandmarkSprite() {
         try {
             BufferedImage originalImage = ImageIO.read(Landmark.class.getResourceAsStream("/landmark.png"));
+            if (originalImage == null) return null;
 
             int newWidth = 128;
             int newHeight = 128;
@@ -28,14 +54,8 @@ public class Landmark extends InteractiveObject {
             
             return scaledImage;
         } catch (IOException e) {
-            System.err.println("Error loading landmark image: " + e.getMessage());
-            throw new RuntimeException("Failed to load landmark image", e);
+            return null; // Return null instead of throwing exception
         }
-    }
-
-    @Override
-    public void update() {
-        // Landmark behavior updates
     }
 
     @Override
