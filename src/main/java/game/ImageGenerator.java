@@ -41,8 +41,8 @@ public class ImageGenerator {
         }
         
         String topic = topicManager.getTopic();
-        String prompt = "Generate a distinctive fantasy landmark or monument representing " + topic + 
-                       ", suitable as a point of interest on a fantasy map";
+        String prompt = "draw a" + topic; 
+                    //    ", suitable as a point of interest on a fantasy map";
         
         // Use consistent filename format
         String filename = "landmark.png";
