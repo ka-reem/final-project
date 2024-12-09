@@ -1,21 +1,27 @@
+package game;
+
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Scanner;
 import java.util.Properties;
-import java.io.FileInputStream;
 
 public class ImageGenerator {
     private static String ACCOUNT_ID;
     private static String API_TOKEN;
+    private static final String RESOURCES_PATH = "src/main/resources/";
 
     static {
         try {
             Properties props = new Properties();
-            props.load(new FileInputStream("config.properties"));
+            String configPath = RESOURCES_PATH + "config.properties";
+            if (!Files.exists(Paths.get(configPath))) {
+                throw new RuntimeException("config.properties not found in resources directory");
+            }
+            props.load(new FileInputStream(configPath));
             ACCOUNT_ID = props.getProperty("ACCOUNT_ID");
             API_TOKEN = props.getProperty("API_TOKEN");
             
@@ -28,23 +34,31 @@ public class ImageGenerator {
         }
     }
 
-    public static void main(String[] args) {
-        try {
-            // Get prompt from user
-            Scanner scanner = new Scanner(System.in);
-            System.out.println("Enter your map description:");
-            String prompt = scanner.nextLine();
-            
-            // Generate and save image
-            generateImage(prompt);
-            
-            scanner.close();
-        } catch (Exception e) {
-            System.err.println("Error: " + e.getMessage());
+    public static String generateLandmarkForTopic() throws IOException {
+        TopicManager topicManager = TopicManager.getInstance();
+        if (!topicManager.hasValidTopic()) {
+            throw new IllegalStateException("No topic set in TopicManager");
         }
+        
+        String topic = topicManager.getTopic();
+        String prompt = "Generate a distinctive fantasy landmark or monument representing " + topic + 
+                       ", suitable as a point of interest on a fantasy map";
+        
+        // Use consistent filename format
+        String filename = "landmark.png";
+        System.out.println("Generating landmark image for topic: " + topic);
+        generateImage(prompt, filename);
+        System.out.println("Landmark image generation completed");
+        return filename;
     }
 
-    private static void generateImage(String prompt) throws IOException {
+    private static void generateImage(String prompt, String filename) throws IOException {
+        // Delete existing file if it exists
+        File outputFile = new File(RESOURCES_PATH + filename);
+        if (outputFile.exists()) {
+            outputFile.delete();
+        }
+
         String url = "https://api.cloudflare.com/client/v4/accounts/" + ACCOUNT_ID + 
                     "/ai/run/@cf/bytedance/stable-diffusion-xl-lightning";
 
@@ -86,15 +100,16 @@ public class ImageGenerator {
             }
         }
 
-        // Read and save image
+        // Modified image saving code with explicit file creation
         try (InputStream in = conn.getInputStream()) {
-            // Generate filename with timestamp
-            String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd-HH-mm-ss"));
-            String filename = "generated-map-" + timestamp + ".png";
+            String fullPath = RESOURCES_PATH + filename;
+            File file = new File(fullPath);
+            Files.copy(in, file.toPath());
+            System.out.println("Successfully saved landmark image to: " + fullPath);
             
-            // Save the image
-            Files.copy(in, new File(filename).toPath());
-            System.out.println("Image saved as: " + filename);
+            if (!file.exists()) {
+                throw new IOException("File was not created successfully");
+            }
         }
     }
 }

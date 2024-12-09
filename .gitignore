@@ -35,3 +35,9 @@ src/main/resources/config.properties
 venv/
 audio/
 *.mp3
+
+# Image generation 
+*.png
+
+# LMNT API key
+.env

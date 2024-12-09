@@ -1,6 +1,11 @@
 import asyncio
 import sys
 import urllib.parse
+import os
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 try:
     from lmnt.api import Speech
@@ -15,8 +20,13 @@ async def generate_speech(text, output_file='output.mp3'):
         print(f"Generating speech for: {decoded_text}")
         print(f"Output file: {output_file}")
         
-        async with Speech() as speech:
-            synthesis = await speech.synthesize(decoded_text, 'lily')
+        api_key = os.getenv('LMNT_API_KEY')
+        if not api_key:
+            raise ValueError("LMNT_API_KEY not found in environment variables")
+            
+        async with Speech(api_key=api_key) as speech:
+            # synthesis = await speech.synthesize(decoded_text, 'lily')
+            synthesis = await speech.synthesize(decoded_text, '6bc9c06a-8e4a-4739-8b31-259f937f71d4')
             
         with open(output_file, 'wb') as f:
             f.write(synthesis['audio'])

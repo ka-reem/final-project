@@ -224,7 +224,7 @@ public class ChatPanel extends JPanel {
             "3. Give clear directions to next location\n" +
             "4. Include interesting facts about %s with each quest\n" +
             "5. Keep responses under 30 words\n" +
-            "6. Use emojis and engaging language" +
+            // "6. Use emojis and engaging language" + // No emojis due to LMNT integration
             "DO NOT HALLUCINATE, DO NOT MAKE THINGS UP",
 
             
@@ -262,8 +262,16 @@ public class ChatPanel extends JPanel {
             if (learningTopic == null && !input.startsWith("/")) {
                 String extractedTopic = extractLearningTopic(input);
                 learningTopic = extractedTopic;
-                // Add this line to save the topic to TopicManager
                 TopicManager.getInstance().setTopic(extractedTopic);
+                
+                // Generate landmark image for the topic
+                try {
+                    String imagePath = ImageGenerator.generateLandmarkForTopic();
+                    appendToChat("\nGuide: Generated landmark for " + extractedTopic);
+                } catch (IOException e) {
+                    appendToChat("\nError generating landmark: " + e.getMessage());
+                }
+
                 try {
                     String summaryPrompt = "You are helping someone learn about: " + extractedTopic + 
                                          "\nProvide an encouraging 1-2 sentence response that:" +
