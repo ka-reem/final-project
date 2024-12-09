@@ -41,7 +41,7 @@ public class ImageGenerator {
         }
         
         String topic = topicManager.getTopic();
-        String prompt = "SINGLE OBJECT that is pixelated of a " + topic; 
+        String prompt = "Draw a " + topic; 
                     //    ", suitable as a point of interest on a fantasy map";
         
         // Use consistent filename format

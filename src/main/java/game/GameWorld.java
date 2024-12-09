@@ -7,25 +7,25 @@ import java.awt.event.KeyEvent;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.Objects;
-import java.net.URL;  // Add this import
+import java.net.URL;  
 import java.awt.event.ActionEvent;
 import java.awt.geom.AffineTransform;
 
 public class GameWorld extends JPanel implements Runnable {
 
     private BufferedImage world;
-    private BufferedImage mapBackground;  // Add this field
+    private BufferedImage mapBackground; 
     private Player t1;
     private final JFrame frame;  
     private long tick = 0;
-    private NPC npc1;  // rename from npc to npc1
-    private NPC npc2;  // add second NPC
-    private Landmark landmark1; // Add landmark object
-    private Game game;  // Add reference to main game
-    private boolean isNearNPC1 = false;  // Add separate flags for each NPC
+    private NPC npc1;  
+    private NPC npc2;  
+    private Landmark landmark1; 
+    private Game game;  
+    private boolean isNearNPC1 = false;  
     private boolean isNearNPC2 = false;
-    private boolean isNearLandmark1 = false;  // Add this field
-    private boolean firstNPCInteraction = true; // Add this field
+    private boolean isNearLandmark1 = false;  
+    private boolean firstNPCInteraction = true; 
 
     // Add viewport tracking
     private int viewportX = 0;
@@ -33,9 +33,9 @@ public class GameWorld extends JPanel implements Runnable {
     private final int SCROLL_SPEED = 5;
     private Rectangle viewport;
     private static final float ZOOM_LEVEL = 1.0f;  // Changed from 0.75f to 1.0f
-    private static final int MAP_SCALE = 2;  // Add this constant
+    private static final int MAP_SCALE = 2;  
 
-    // Add new fields for scaling
+
     private double scaleX = 1.0;
     private double scaleY = 1.0;
 
@@ -44,12 +44,10 @@ public class GameWorld extends JPanel implements Runnable {
         this.frame = game;
         viewport = new Rectangle(0, 0, GameConstants.GAME_SCREEN_WIDTH, GameConstants.GAME_SCREEN_HEIGHT);
         
-        // Add key bindings for scrolling
+        // Add key bindings for scrolling - not needed for now
         addKeyBindings();
-        
-        // Make panel focusable
+
         setFocusable(true);
-        // Request focus initially
         requestFocusInWindow();
     }
 
@@ -148,6 +146,7 @@ public class GameWorld extends JPanel implements Runnable {
                 /*
                  * Sleep for 1000/144 ms (~6.9ms). This is done to have our 
                  * loop run at a fixed rate per/sec. 
+                 * Redo for efficiency?
                 */
                 Thread.sleep(1000 / 144);
             }
@@ -161,8 +160,6 @@ public class GameWorld extends JPanel implements Runnable {
         this.t1.setX(300);
         this.t1.setY(300);
     }
-
-    
 
     public void InitializeGame() {
         this.world = new BufferedImage(GameConstants.GAME_SCREEN_WIDTH,
@@ -191,7 +188,7 @@ public class GameWorld extends JPanel implements Runnable {
                 System.out.println("Map scaled to: " + scaledWidth + "x" + scaledHeight);
             } else {
                 System.err.println("ERROR: map.png not found in resources!");
-                // Create a default background with grid
+                // Create a default background with grid - temporary
                 mapBackground = createDefaultBackground();
             }
         } catch (IOException e) {
@@ -334,7 +331,7 @@ public class GameWorld extends JPanel implements Runnable {
         float newY = Math.max(viewportY, Math.min(player.getY(), viewportY + viewport.height - player.getHeight()));
         player.setPosition(newX, newY);
         
-        // Scroll viewport if player is near edges
+        // Scroll if player is near edges 
         if (player.getX() < viewportX + 100) scrollViewport(-SCROLL_SPEED, 0);
         if (player.getX() > viewportX + viewport.width - 100) scrollViewport(SCROLL_SPEED, 0);
         if (player.getY() < viewportY + 100) scrollViewport(0, -SCROLL_SPEED);

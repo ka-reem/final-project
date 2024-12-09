@@ -20,12 +20,10 @@ import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 
 public class ChatPanel extends JPanel {
-    // Add new constant for venv path
     private static final String VENV_PATH = new File("venv").getAbsolutePath();
-    // Update constants
     private static final String AUDIO_DIR = "audio/";
     private static final String PYTHON_SCRIPT = "/lmnt_tts.py";
-    private static final Color CHAT_BG_COLOR = new Color(30, 30, 30, 180); // 160/255 alpha
+    private static final Color CHAT_BG_COLOR = new Color(30, 30, 30, 180); 
     private static final Color CHAT_AREA_BG = new Color(255, 255, 255, 10);
     private static final Color INPUT_BG = new Color(255, 255, 255, 20);
     private static final Color USER_TEXT_COLOR = new Color(255, 255, 255); // Not working properly
@@ -53,7 +51,7 @@ public class ChatPanel extends JPanel {
         setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
         setBackground(new Color(0, 0, 0, 0));
 
-        pdfReader = new PDFReader();  // Initialize PDFReader
+        pdfReader = new PDFReader();  // Initialize PDFReader // No longer used
         initializeComponents();
         setupListeners();
         // startChat(); // Commented out - chat will start through NPC interaction instead
@@ -534,7 +532,7 @@ public class ChatPanel extends JPanel {
         });
     }
 
-    // Add cleanup on window close
+    // Add cleanup on window close - prevent audio from continuing to play even after window is closed
     public void cleanup() {
         audioExecutor.shutdown();
         try {

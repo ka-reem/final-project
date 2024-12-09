@@ -42,6 +42,7 @@ public class GameMenu extends JFrame {
     }
 
     private void openOptions() {
+        // Change this to "choose topic to learn" or add settings to turn on and off image generation and text-to-speech
         System.out.println("Opening options"); // Debugging
     }
 
