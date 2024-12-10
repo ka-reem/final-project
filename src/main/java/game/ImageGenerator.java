@@ -41,7 +41,7 @@ public class ImageGenerator {
         }
         
         String topic = topicManager.getTopic();
-        String prompt = "Draw a " + topic; 
+        String prompt = "Picture of " + topic; 
                     //    ", suitable as a point of interest on a fantasy map";
         
         // Use consistent filename format
