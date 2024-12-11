@@ -12,11 +12,15 @@ import java.util.Properties;
 import java.io.InputStream;
 import java.io.IOException;
 
+import game.HeyGen; 
+
+
 public class Game extends JFrame {
     private GameWorld gameWorld;
     private ChatPanel chatPanel;
     private boolean isChatVisible = false;
     private JLayeredPane layeredPane;
+    private HeyGen heyGen;
 
     private String loadApiKey() {
         Properties props = new Properties();
@@ -27,6 +31,21 @@ public class Game extends JFrame {
             }
             props.load(input);
             return props.getProperty("groq.api.key");
+        } catch (IOException e) {
+            e.printStackTrace();
+            return "";
+        }
+    }
+
+    private String loadHeyGenApiKey() {
+        Properties props = new Properties();
+        try (InputStream input = getClass().getClassLoader().getResourceAsStream("config.properties")) {
+            if (input == null) {
+                System.out.println("Unable to find config.properties");
+                return ""; 
+            }
+            props.load(input);
+            return props.getProperty("heygen.api.key");
         } catch (IOException e) {
             e.printStackTrace();
             return "";
@@ -77,6 +96,25 @@ public class Game extends JFrame {
         
         toolbar.add(backButton);
         toolbar.add(toggleChatButton);
+
+        // TODO: HeyGen Implementation
+        // Initialize HeyGen
+        String heyGenApiKey = loadHeyGenApiKey();
+        heyGen = new HeyGen(heyGenApiKey);
+
+        // Create HeyGen button
+        JButton heyGenButton = new JButton("Generate Video");
+        heyGenButton.addActionListener(e -> {
+            try {
+                String videoId = heyGen.generateVideo("Hello from Taxplorer!");
+                String status = heyGen.getVideoStatus(videoId);
+                showNPCChat("Video generation started. Status: " + status);
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                showNPCChat("Failed to generate video: " + ex.getMessage());
+            }
+        });
+        toolbar.add(heyGenButton);
         
         // Initialize component bounds with proper sizes
         gameWorld.setBounds(0, 0, width, height);

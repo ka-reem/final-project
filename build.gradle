@@ -24,6 +24,9 @@ dependencies {
     implementation 'com.squareup.okhttp3:okhttp:4.10.0'
     // LMNT: for mp3
     implementation 'javazoom:jlayer:1.0.1'  
+    // HeyGen video avatar
+    implementation 'org.json:json:20231013'
+
 }
 
 application {
