@@ -97,21 +97,50 @@ public class Game extends JFrame {
         toolbar.add(backButton);
         toolbar.add(toggleChatButton);
 
-        // TODO: HeyGen Implementation
-        // Initialize HeyGen
+        // TODO:HeyGen Implementation
+        // Initialize HeyGen with API key
         String heyGenApiKey = loadHeyGenApiKey();
         heyGen = new HeyGen(heyGenApiKey);
 
-        // Create HeyGen button
+        // Create HeyGen button with improved error handling and status updates
         JButton heyGenButton = new JButton("Generate Video");
         heyGenButton.addActionListener(e -> {
             try {
+                showNPCChat("Starting video generation...");
                 String videoId = heyGen.generateVideo("Hello from Taxplorer!");
-                String status = heyGen.getVideoStatus(videoId);
-                showNPCChat("Video generation started. Status: " + status);
+                showNPCChat("Got video ID: " + videoId);
+                
+                final int[] attempts = {0};
+                final int maxAttempts = 5; // 1 minute timeout (20 * 3 seconds)
+                
+                Timer timer = new Timer(3000, event -> {
+                    try {
+                        attempts[0]++;
+                        String status = heyGen.getVideoStatus(videoId);
+                        showNPCChat("Video status: " + status + " (attempt " + attempts[0] + "/" + maxAttempts + ")");
+                        
+                        if (status.equals("completed")) {
+                            String videoUrl = heyGen.getVideoUrl(videoId);
+                            showNPCChat("Video ready! URL: " + videoUrl);
+                            ((Timer)event.getSource()).stop();
+                        } else if (attempts[0] >= maxAttempts) {
+                            showNPCChat("Video generation timed out after " + maxAttempts + " attempts");
+                            ((Timer)event.getSource()).stop();
+                        } else if (status.equals("failed")) {
+                            showNPCChat("Video generation failed");
+                            ((Timer)event.getSource()).stop();
+                        }
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
+                        showNPCChat("Error checking video: " + ex.getMessage());
+                        ((Timer)event.getSource()).stop();
+                    }
+                });
+                timer.start();
+                
             } catch (Exception ex) {
                 ex.printStackTrace();
-                showNPCChat("Failed to generate video: " + ex.getMessage());
+                showNPCChat("Error: " + ex.getMessage());
             }
         });
         toolbar.add(heyGenButton);
