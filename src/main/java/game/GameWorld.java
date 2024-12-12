@@ -20,11 +20,17 @@ public class GameWorld extends JPanel implements Runnable {
     private long tick = 0;
     private NPC npc1;  
     private NPC npc2;  
-    private Landmark landmark1; 
+    private Landmark landmark1;
+    private Landmark landmark2;
+    private Landmark landmark3;
+    private Landmark landmark4;
     private Game game;  
     private boolean isNearNPC1 = false;  
     private boolean isNearNPC2 = false;
     private boolean isNearLandmark1 = false;  
+    private boolean isNearLandmark2 = false;
+    private boolean isNearLandmark3 = false;
+    private boolean isNearLandmark4 = false;
     private boolean firstNPCInteraction = true; 
 
     // Add viewport tracking
@@ -98,12 +104,15 @@ public class GameWorld extends JPanel implements Runnable {
                 this.tick++;
                 this.t1.update(); // update tank
                 
-                // Check both NPCs interaction
+                // Check NPCs and landmarks interaction
                 boolean nearNPC1 = npc1.isPlayerInRange(t1);
                 boolean nearNPC2 = npc2.isPlayerInRange(t1);
-                boolean nearLandmark1 = landmark1.isPlayerInRange(t1); // Check landmark interaction
-                
+                boolean nearLandmark1 = landmark1.isPlayerInRange(t1);
+                boolean nearLandmark2 = landmark2.isPlayerInRange(t1);
+                boolean nearLandmark3 = landmark3.isPlayerInRange(t1);
+                boolean nearLandmark4 = landmark4.isPlayerInRange(t1);
 
+                // Handle NPC interactions
                 // Prevents objects from infinitely detecting interaction
                 // Handle NPC1 interaction
                 if (nearNPC1 != isNearNPC1) {
@@ -131,12 +140,25 @@ public class GameWorld extends JPanel implements Runnable {
                     }
                 }
                 
-                // Handle Landmark interaction
+                // Handle all landmark interactions
                 if (nearLandmark1 != isNearLandmark1) {
                     isNearLandmark1 = nearLandmark1;
-                    if (isNearLandmark1) {
-                        landmark1.activateMinigame(t1);
-                    }
+                    if (isNearLandmark1) landmark1.activateMinigame(t1);
+                }
+                
+                if (nearLandmark2 != isNearLandmark2) {
+                    isNearLandmark2 = nearLandmark2;
+                    if (isNearLandmark2) landmark2.activateMinigame(t1);
+                }
+                
+                if (nearLandmark3 != isNearLandmark3) {
+                    isNearLandmark3 = nearLandmark3;
+                    if (isNearLandmark3) landmark3.activateMinigame(t1);
+                }
+                
+                if (nearLandmark4 != isNearLandmark4) {
+                    isNearLandmark4 = nearLandmark4;
+                    if (isNearLandmark4) landmark4.activateMinigame(t1);
                 }
                 
                 // Update viewport to follow player
@@ -245,7 +267,29 @@ public class GameWorld extends JPanel implements Runnable {
         t1 = new Player(startX, startY, t1img);
         npc1 = new NPC(GameConstants.GAME_SCREEN_WIDTH / 4f, GameConstants.GAME_SCREEN_HEIGHT / 3f, npc1Img, "Hello!");
         npc2 = new NPC(GameConstants.GAME_SCREEN_WIDTH * 3f / 4f, GameConstants.GAME_SCREEN_HEIGHT * 2f / 3f, npc2Img, "Welcome!");
-        landmark1 = new Landmark(GameConstants.GAME_SCREEN_WIDTH / 4f, GameConstants.GAME_SCREEN_HEIGHT / 4f, landmark1Img, new minigame1());
+
+        // Create different colored landmarks
+        BufferedImage landmarkImg1 = createLandmarkImage(Color.YELLOW);
+        BufferedImage landmarkImg2 = createLandmarkImage(Color.GREEN);
+        BufferedImage landmarkImg3 = createLandmarkImage(Color.BLUE);
+        BufferedImage landmarkImg4 = createLandmarkImage(Color.RED);
+
+        // Create landmarks with different minigames
+        landmark1 = new Landmark(GameConstants.GAME_SCREEN_WIDTH / 4f, 
+                               GameConstants.GAME_SCREEN_HEIGHT / 4f, 
+                               landmarkImg1, new minigame1());
+        
+        landmark2 = new Landmark(GameConstants.GAME_SCREEN_WIDTH * 3f / 4f, 
+                               GameConstants.GAME_SCREEN_HEIGHT / 4f, 
+                               landmarkImg2, new minigame2());
+        
+        landmark3 = new Landmark(GameConstants.GAME_SCREEN_WIDTH / 4f, 
+                               GameConstants.GAME_SCREEN_HEIGHT * 3f / 4f, 
+                               landmarkImg3, new minigame3());
+        
+        landmark4 = new Landmark(GameConstants.GAME_SCREEN_WIDTH * 3f / 4f, 
+                               GameConstants.GAME_SCREEN_HEIGHT * 3f / 4f, 
+                               landmarkImg4, new minigame4());
 
         // Setup controls
         PlayerControl tc1 = new PlayerControl(t1, KeyEvent.VK_W, KeyEvent.VK_S, KeyEvent.VK_A, KeyEvent.VK_D, KeyEvent.VK_SPACE);
@@ -272,6 +316,15 @@ public class GameWorld extends JPanel implements Runnable {
         }
         g2d.dispose();
         return defaultBg;
+    }
+
+    private BufferedImage createLandmarkImage(Color color) {
+        BufferedImage img = new BufferedImage(30, 30, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g2d = img.createGraphics();
+        g2d.setColor(color);
+        g2d.fillOval(0, 0, 30, 30);
+        g2d.dispose();
+        return img;
     }
 
     @Override
@@ -316,6 +369,9 @@ public class GameWorld extends JPanel implements Runnable {
         this.npc1.draw((Graphics2D)buffer);
         this.npc2.draw((Graphics2D)buffer);
         this.landmark1.draw((Graphics2D)buffer);
+        this.landmark2.draw((Graphics2D)buffer);
+        this.landmark3.draw((Graphics2D)buffer);
+        this.landmark4.draw((Graphics2D)buffer);
         
         buffer.setTransform(old);
         buffer.dispose();
