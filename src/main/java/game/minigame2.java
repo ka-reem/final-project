@@ -101,18 +101,15 @@ public class minigame2 extends JFrame implements Minigame {
     private void generateQuizContent() throws IOException {
         String topic = TopicManager.getInstance().getTopic();
         String prompt = String.format(
-            "Generate a multiple choice quiz about %s with 3 questions. Format as JSON:\n" +
-            "{\n" +
-            "  \"questions\": [\n" +
-            "    {\"question\": \"Q1\", \"options\": [\"A1\", \"B1\", \"C1\"], \"correct\": 0},\n" +
-            "    {\"question\": \"Q2\", \"options\": [\"A2\", \"B2\", \"C2\"], \"correct\": 1},\n" +
-            "    {\"question\": \"Q3\", \"options\": [\"A3\", \"B3\", \"C3\"], \"correct\": 2}\n" +
-            "  ]\n" +
-            "}\n", topic);
+            "Create a multiple choice quiz about %s with 3 questions.\n" +
+            "Keep answers short and clear. Format exactly as:\n" +
+            "Q1|A1|B1|C1|0\n" +
+            "Q2|A2|B2|C2|1\n" +
+            "Q3|A3|B3|C3|2\n" +
+            "Where Q is the question, A/B/C are options, and the last number is the correct answer (0=A, 1=B, 2=C)", 
+            topic);
 
         String response = groqClient.generateResponse(prompt);
-        // Clean the response if needed
-        response = response.trim();
         parseQuizContent(response);
     }
 
@@ -143,32 +140,37 @@ public class minigame2 extends JFrame implements Minigame {
         questions = new ArrayList<>();
         options = new ArrayList<>();
         answers = new ArrayList<>();
-        
+
         try {
-            Gson gson = new Gson();
-            JsonObject json = gson.fromJson(response, JsonObject.class);
-            JsonArray questionsArray = json.getAsJsonArray("questions");
-            
-            for (int i = 0; i < questionsArray.size(); i++) {
-                JsonObject q = questionsArray.get(i).getAsJsonObject();
-                questions.add(q.get("question").getAsString());
-                
-                JsonArray opts = q.getAsJsonArray("options");
-                String[] optionsArray = new String[3];
-                for (int j = 0; j < opts.size(); j++) {
-                    optionsArray[j] = opts.get(j).getAsString();
+            String[] lines = response.trim().split("\n");
+            for (String line : lines) {
+                String[] parts = line.split("\\|");
+                if (parts.length == 5) {
+                    questions.add(parts[0].trim());
+                    options.add(new String[]{
+                        parts[1].trim(),
+                        parts[2].trim(),
+                        parts[3].trim()
+                    });
+                    answers.add(Integer.parseInt(parts[4].trim()));
                 }
-                options.add(optionsArray);
-                
-                answers.add(q.get("correct").getAsInt());
+            }
+
+            // Add fallback if no valid questions were parsed
+            if (questions.isEmpty()) {
+                addFallbackQuestion();
             }
         } catch (Exception e) {
             e.printStackTrace();
-            // Fallback content
-            questions.add("Sample question?");
-            options.add(new String[]{"Option A", "Option B", "Option C"});
-            answers.add(0);
+            addFallbackQuestion();
         }
+    }
+
+    private void addFallbackQuestion() {
+        String topic = TopicManager.getInstance().getTopic();
+        questions.add("What is a key concept of " + topic + "?");
+        options.add(new String[]{"Option A", "Option B", "Option C"});
+        answers.add(0);
     }
 
     private void handleSubmit() {

@@ -4,9 +4,6 @@ import javax.swing.*;
 import java.awt.*;
 import java.io.*;
 import java.util.*;
-import com.google.gson.Gson;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonArray;
 
 public class minigame3 extends JFrame implements Minigame {
     private GroqClient groqClient;
@@ -15,10 +12,144 @@ public class minigame3 extends JFrame implements Minigame {
     private String firstChoice = null;
     private JButton firstButton = null;
     private int matchesFound = 0;
+    private boolean isProcessing = false;
 
     public minigame3() {
+        pairs = new HashMap<>();
         initializeGroqClient();
         setupUI();
+    }
+
+    private void setupUI() {
+        setTitle("Matching Game");
+        setSize(800, 600);
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        setLocationRelativeTo(null);
+        getContentPane().setBackground(new Color(240, 240, 240));
+    }
+
+    private void createMatchingGame() {
+        getContentPane().removeAll();
+        
+        // Create main panel with padding
+        JPanel mainPanel = new JPanel(new GridLayout(3, 4, 15, 15));
+        mainPanel.setBackground(new Color(240, 240, 240));
+        mainPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+
+        // Create and shuffle cards
+        ArrayList<String> allItems = new ArrayList<>();
+        pairs.forEach((term, def) -> {
+            allItems.add(term);
+            allItems.add(def);
+        });
+        Collections.shuffle(allItems);
+
+        // Create buttons with improved styling
+        buttons = new JButton[allItems.size()];
+        for (int i = 0; i < allItems.size(); i++) {
+            buttons[i] = createStyledButton(allItems.get(i));
+            mainPanel.add(buttons[i]);
+        }
+
+        // Add panel to scroll pane for better handling of long content
+        JScrollPane scrollPane = new JScrollPane(mainPanel);
+        scrollPane.setBorder(null);
+        add(scrollPane);
+
+        // Update display
+        revalidate();
+        repaint();
+    }
+
+    private JButton createStyledButton(String value) {
+        JButton button = new JButton("?");
+        button.putClientProperty("value", value);
+        button.setFont(new Font("Arial", Font.BOLD, 14));
+        button.setPreferredSize(new Dimension(180, 120));
+        button.setBackground(Color.WHITE);
+        button.setBorder(BorderFactory.createLineBorder(Color.GRAY, 2));
+        button.setFocusPainted(false);
+        
+        button.addActionListener(e -> {
+            if (!isProcessing && button.getText().equals("?")) {
+                handleButtonClick(button);
+            }
+        });
+        
+        return button;
+    }
+
+    private void handleButtonClick(JButton button) {
+        if (isProcessing) return;
+        
+        String value = (String) button.getClientProperty("value");
+        button.setText("<html><center>" + value + "</center></html>");
+        
+        if (firstChoice == null) {
+            firstChoice = value;
+            firstButton = button;
+            button.setBackground(new Color(200, 200, 255)); // Light blue for selected
+        } else {
+            isProcessing = true;
+            
+            if ((pairs.containsKey(firstChoice) && pairs.get(firstChoice).equals(value)) ||
+                (pairs.containsKey(value) && pairs.get(value).equals(firstChoice))) {
+                // Match found
+                matchFound(button);
+            } else {
+                // No match
+                noMatch(button);
+            }
+        }
+    }
+
+    private void matchFound(JButton secondButton) {
+        matchesFound++;
+        firstButton.setBackground(new Color(144, 238, 144)); // Light green
+        secondButton.setBackground(new Color(144, 238, 144));
+        
+        javax.swing.Timer timer = new javax.swing.Timer(800, e -> {
+            firstButton.setEnabled(false);
+            secondButton.setEnabled(false);
+            firstChoice = null;
+            firstButton = null;
+            isProcessing = false;
+            
+            if (matchesFound == pairs.size()) {
+                gameComplete();
+            }
+        });
+        timer.setRepeats(false);
+        timer.start();
+    }
+
+    private void noMatch(JButton secondButton) {
+        secondButton.setBackground(new Color(255, 200, 200)); // Light red
+        firstButton.setBackground(new Color(255, 200, 200));
+        
+        javax.swing.Timer timer = new javax.swing.Timer(1000, e -> {
+            firstButton.setText("?");
+            secondButton.setText("?");
+            firstButton.setBackground(Color.WHITE);
+            secondButton.setBackground(Color.WHITE);
+            firstChoice = null;
+            firstButton = null;
+            isProcessing = false;
+        });
+        timer.setRepeats(false);
+        timer.start();
+    }
+
+    private void gameComplete() {
+        javax.swing.Timer timer = new javax.swing.Timer(500, e -> {
+            JOptionPane.showMessageDialog(this, 
+                "Congratulations! You've matched all pairs!", 
+                "Game Complete", 
+                JOptionPane.INFORMATION_MESSAGE);
+            dispose();
+        });
+        timer.setRepeats(false);
+        timer.start();
     }
 
     private void initializeGroqClient() {
@@ -33,137 +164,56 @@ public class minigame3 extends JFrame implements Minigame {
         }
     }
 
-    private void setupUI() {
-        setTitle("Matching Game");
-        setSize(600, 400);
-        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        setLocationRelativeTo(null);
+    private void generatePairs() throws IOException {
+        String topic = TopicManager.getInstance().getTopic();
+        String prompt = String.format(
+            "Generate 6 pairs of matching terms and definitions about %s. Format each pair as:\nterm|definition", 
+            topic);
+
+        String response = groqClient.generateResponse(prompt);
+        parsePairsContent(response);
+    }
+
+    private void parsePairsContent(String response) {
+        pairs.clear();
+        String[] lines = response.split("\n");
+        for (String line : lines) {
+            String[] parts = line.split("\\|");
+            if (parts.length == 2) {
+                pairs.put(parts[0].trim(), parts[1].trim());
+            }
+        }
+        
+        // Add fallback pair if no valid pairs were parsed
+        if (pairs.isEmpty()) {
+            pairs.put("Term 1", "Definition 1");
+            pairs.put("Term 2", "Definition 2");
+            pairs.put("Term 3", "Definition 3");
+        }
     }
 
     @Override
     public void start() {
         if (!TopicManager.getInstance().hasValidTopic()) {
-            JOptionPane.showMessageDialog(null, 
-                "You found a landmark! Please talk to an available NPC to select a topic first.");
+            JOptionPane.showMessageDialog(this, 
+                "Please select a topic first!", 
+                "No Topic Selected", 
+                JOptionPane.WARNING_MESSAGE);
             dispose();
             return;
         }
 
         try {
             generatePairs();
-            setVisible(true);
             createMatchingGame();
-        } catch (IOException e) {
-            e.printStackTrace();
-            JOptionPane.showMessageDialog(null, "Error generating matching game: " + e.getMessage());
-            dispose();
-        }
-    }
-
-    private void generatePairs() throws IOException {
-        String topic = TopicManager.getInstance().getTopic();
-        String prompt = String.format(
-            "Generate 4 matching pairs about %s. Each pair should have a term and its definition. Format as JSON:\n" +
-            "{\n" +
-            "  \"pairs\": [\n" +
-            "    {\"term\": \"term1\", \"definition\": \"definition1\"},\n" +
-            "    {\"term\": \"term2\", \"definition\": \"definition2\"},\n" +
-            "    {\"term\": \"term3\", \"definition\": \"definition3\"},\n" +
-            "    {\"term\": \"term4\", \"definition\": \"definition4\"}\n" +
-            "  ]\n" +
-            "}\n", topic);
-
-        String response = groqClient.generateResponse(prompt);
-        parsePairsContent(response);
-    }
-
-    private void createMatchingGame() {
-        JFrame frame = new JFrame("Matching Game - " + TopicManager.getInstance().getTopic());
-        frame.setSize(600, 400);
-        frame.setLocationRelativeTo(null);
-
-        JPanel mainPanel = new JPanel(new GridLayout(4, 4, 10, 10));
-        mainPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
-
-        ArrayList<String> allItems = new ArrayList<>();
-        pairs.forEach((term, def) -> {
-            allItems.add(term);
-            allItems.add(def);
-        });
-        Collections.shuffle(allItems);
-
-        buttons = new JButton[allItems.size()];
-        for (int i = 0; i < allItems.size(); i++) {
-            final int index = i;
-            buttons[i] = new JButton("?");
-            buttons[i].putClientProperty("value", allItems.get(i));
-            buttons[i].addActionListener(e -> handleButtonClick(buttons[index]));
-            mainPanel.add(buttons[i]);
-        }
-
-        frame.add(mainPanel);
-        frame.setVisible(true);
-    }
-
-    private void handleButtonClick(JButton button) {
-        if (button.getText().equals("?")) {
-            button.setText((String) button.getClientProperty("value"));
-            
-            if (firstChoice == null) {
-                firstChoice = (String) button.getClientProperty("value");
-                firstButton = button;
-            } else {
-                checkMatch(button);
-            }
-        }
-    }
-
-    private void checkMatch(JButton secondButton) {
-        String secondChoice = (String) secondButton.getClientProperty("value");
-        
-        if ((pairs.containsKey(firstChoice) && pairs.get(firstChoice).equals(secondChoice)) ||
-            (pairs.containsKey(secondChoice) && pairs.get(secondChoice).equals(firstChoice))) {
-            matchesFound++;
-            if (matchesFound == pairs.size()) {
-                JOptionPane.showMessageDialog(null, "Congratulations! You found all matches!");
-            }
-        } else {
-            javax.swing.Timer timer = new javax.swing.Timer(1000, e -> {
-                firstButton.setText("?");
-                secondButton.setText("?");
-            });
-            timer.setRepeats(false);
-            timer.start();
-        }
-        
-        firstChoice = null;
-        firstButton = null;
-    }
-
-    private void parsePairsContent(String response) {
-        pairs = new HashMap<>();
-        try {
-            Gson gson = new Gson();
-            JsonObject json = gson.fromJson(response, JsonObject.class);
-            JsonArray pairsArray = json.getAsJsonArray("pairs");
-            
-            for (int i = 0; i < pairsArray.size(); i++) {
-                JsonObject pair = pairsArray.get(i).getAsJsonObject();
-                pairs.put(
-                    pair.get("term").getAsString(),
-                    pair.get("definition").getAsString()
-                );
-            }
+            setVisible(true);
         } catch (Exception e) {
             e.printStackTrace();
-            // Fallback content
-            pairs.put("Term 1", "Definition 1");
-            pairs.put("Term 2", "Definition 2");
+            JOptionPane.showMessageDialog(this, 
+                "Error starting game: " + e.getMessage(), 
+                "Error", 
+                JOptionPane.ERROR_MESSAGE);
+            dispose();
         }
-    }
-
-    private String loadApiKey() {
-        // ...existing API key loading code...
-        return "your-api-key";
     }
 }
