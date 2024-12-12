@@ -5,9 +5,7 @@ import StreamingAvatar, {
 
 // DOM elements
 const videoElement = document.getElementById("avatarVideo") as HTMLVideoElement;
-const startButton = document.getElementById(
-  "startSession"
-) as HTMLButtonElement;
+const startButton = document.getElementById("startSession") as HTMLButtonElement;
 const endButton = document.getElementById("endSession") as HTMLButtonElement;
 const speakButton = document.getElementById("speakButton") as HTMLButtonElement;
 const userInput = document.getElementById("userInput") as HTMLInputElement;
@@ -83,13 +81,33 @@ async function terminateAvatarSession() {
   avatar = null;
 }
 
-// Handle speaking event
+// Handle speaking event using TTS
 async function handleSpeak() {
   if (avatar && userInput.value) {
-    await avatar.speak({
-      text: userInput.value,
-    });
-    userInput.value = ""; // Clear input after speaking
+    try {
+      const response = await fetch("https://api2.heygen.com/v1/online/text_to_speech.generate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": import.meta.env.VITE_HEYGEN_API_KEY,
+        },
+        body: JSON.stringify({
+          text: userInput.value,
+          voice: "default", // Specify the voice type if needed
+          language: "en-US", // Specify the language if needed
+        }),
+      });
+
+      const { audioUrl } = await response.json();
+      
+      // Play the audio using an audio element or similar method
+      const audio = new Audio(audioUrl);
+      audio.play();
+
+      userInput.value = ""; // Clear input after speaking
+    } catch (error) {
+      console.error("Error during TTS operation:", error);
+    }
   }
 }
 
