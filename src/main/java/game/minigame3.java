@@ -2,10 +2,13 @@ package game;
 
 import javax.swing.*;
 import java.awt.*;
-import java.io.IOException;
+import java.io.*;
 import java.util.*;
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonArray;
 
-public class minigame3 implements Minigame {
+public class minigame3 extends JFrame implements Minigame {
     private GroqClient groqClient;
     private HashMap<String, String> pairs;
     private JButton[] buttons;
@@ -14,35 +17,61 @@ public class minigame3 implements Minigame {
     private int matchesFound = 0;
 
     public minigame3() {
-        String apiKey = loadApiKey();
-        groqClient = new GroqClient(apiKey);
+        initializeGroqClient();
+        setupUI();
+    }
+
+    private void initializeGroqClient() {
+        Properties props = new Properties();
+        try (InputStream input = getClass().getClassLoader().getResourceAsStream("config.properties")) {
+            if (input != null) {
+                props.load(input);
+                groqClient = new GroqClient(props.getProperty("groq.api.key"));
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void setupUI() {
+        setTitle("Matching Game");
+        setSize(600, 400);
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        setLocationRelativeTo(null);
     }
 
     @Override
     public void start() {
-        String topic = TopicManager.getInstance().getTopic();
+        if (!TopicManager.getInstance().hasValidTopic()) {
+            JOptionPane.showMessageDialog(null, 
+                "You found a landmark! Please talk to an available NPC to select a topic first.");
+            dispose();
+            return;
+        }
+
         try {
-            generatePairs(topic);
+            generatePairs();
+            setVisible(true);
             createMatchingGame();
         } catch (IOException e) {
             e.printStackTrace();
             JOptionPane.showMessageDialog(null, "Error generating matching game: " + e.getMessage());
+            dispose();
         }
     }
 
-    private void generatePairs(String topic) throws IOException {
+    private void generatePairs() throws IOException {
+        String topic = TopicManager.getInstance().getTopic();
         String prompt = String.format(
-            "Create 4 matching pairs about %s. Format as JSON:\n" +
+            "Generate 4 matching pairs about %s. Each pair should have a term and its definition. Format as JSON:\n" +
             "{\n" +
             "  \"pairs\": [\n" +
             "    {\"term\": \"term1\", \"definition\": \"definition1\"},\n" +
             "    {\"term\": \"term2\", \"definition\": \"definition2\"},\n" +
-            "    ...\n" +
+            "    {\"term\": \"term3\", \"definition\": \"definition3\"},\n" +
+            "    {\"term\": \"term4\", \"definition\": \"definition4\"}\n" +
             "  ]\n" +
-            "}\n" +
-            "Make pairs educational and relevant to %s.",
-            topic, topic
-        );
+            "}\n", topic);
 
         String response = groqClient.generateResponse(prompt);
         parsePairsContent(response);
@@ -99,7 +128,7 @@ public class minigame3 implements Minigame {
                 JOptionPane.showMessageDialog(null, "Congratulations! You found all matches!");
             }
         } else {
-            Timer timer = new Timer(1000, e -> {
+            javax.swing.Timer timer = new javax.swing.Timer(1000, e -> {
                 firstButton.setText("?");
                 secondButton.setText("?");
             });
@@ -109,6 +138,28 @@ public class minigame3 implements Minigame {
         
         firstChoice = null;
         firstButton = null;
+    }
+
+    private void parsePairsContent(String response) {
+        pairs = new HashMap<>();
+        try {
+            Gson gson = new Gson();
+            JsonObject json = gson.fromJson(response, JsonObject.class);
+            JsonArray pairsArray = json.getAsJsonArray("pairs");
+            
+            for (int i = 0; i < pairsArray.size(); i++) {
+                JsonObject pair = pairsArray.get(i).getAsJsonObject();
+                pairs.put(
+                    pair.get("term").getAsString(),
+                    pair.get("definition").getAsString()
+                );
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            // Fallback content
+            pairs.put("Term 1", "Definition 1");
+            pairs.put("Term 2", "Definition 2");
+        }
     }
 
     private String loadApiKey() {
