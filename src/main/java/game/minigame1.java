@@ -163,7 +163,8 @@ public class minigame1 extends JFrame implements Minigame {
             if (userAnswer.equals(currentAnswer)) {
                 score += 10;
                 scoreLabel.setText("Score: " + score);
-                JOptionPane.showMessageDialog(this, "Correct!");
+                MinigameManager.getInstance().markMinigameCompleted(minigame1.class);
+                JOptionPane.showMessageDialog(this, "Correct!\nMinigame completed successfully!");
                 dispose();
             } else {
                 wrongAttempts++;
@@ -191,6 +192,16 @@ public class minigame1 extends JFrame implements Minigame {
 
     @Override
     public void start() {
+        // Check if already completed
+        if (MinigameManager.getInstance().isMinigameCompleted(minigame1.class)) {
+            JOptionPane.showMessageDialog(null, 
+                "You have already completed this minigame!", 
+                "Already Completed", 
+                JOptionPane.INFORMATION_MESSAGE);
+            dispose();
+            return;
+        }
+
         // Add retry mechanism
         int maxRetries = 3;
         int retryCount = 0;

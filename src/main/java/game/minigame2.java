@@ -82,6 +82,15 @@ public class minigame2 extends JFrame implements Minigame {
 
     @Override
     public void start() {
+        if (MinigameManager.getInstance().isMinigameCompleted(minigame2.class)) {
+            JOptionPane.showMessageDialog(null, 
+                "You have already completed this minigame!", 
+                "Already Completed", 
+                JOptionPane.INFORMATION_MESSAGE);
+            dispose();
+            return;
+        }
+
         if (!TopicManager.getInstance().hasValidTopic()) {
             JOptionPane.showMessageDialog(null, 
                 "You found a landmark! Please talk to an available NPC to select a topic first.");
@@ -194,8 +203,14 @@ public class minigame2 extends JFrame implements Minigame {
         if (currentQuestion < questions.size()) {
             showCurrentQuestion();
         } else {
-            JOptionPane.showMessageDialog(this, 
-                String.format("Quiz completed! Score: %d/%d", score, questions.size()));
+            if (score >= questions.size() / 2) { // Pass if at least 50% correct
+                MinigameManager.getInstance().markMinigameCompleted(minigame2.class);
+                JOptionPane.showMessageDialog(this, 
+                    String.format("Quiz completed! Score: %d/%d\nMinigame completed successfully!", score, questions.size()));
+            } else {
+                JOptionPane.showMessageDialog(this, 
+                    String.format("Quiz completed! Score: %d/%d\nTry again to complete the minigame.", score, questions.size()));
+            }
             dispose();
         }
     }

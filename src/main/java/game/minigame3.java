@@ -142,8 +142,9 @@ public class minigame3 extends JFrame implements Minigame {
 
     private void gameComplete() {
         javax.swing.Timer timer = new javax.swing.Timer(500, e -> {
+            MinigameManager.getInstance().markMinigameCompleted(minigame3.class);
             JOptionPane.showMessageDialog(this, 
-                "Congratulations! You've matched all pairs!", 
+                "Congratulations! You've matched all pairs!\nMinigame completed successfully!", 
                 "Game Complete", 
                 JOptionPane.INFORMATION_MESSAGE);
             dispose();
@@ -194,6 +195,15 @@ public class minigame3 extends JFrame implements Minigame {
 
     @Override
     public void start() {
+        if (MinigameManager.getInstance().isMinigameCompleted(minigame3.class)) {
+            JOptionPane.showMessageDialog(this, 
+                "You have already completed this minigame!", 
+                "Already Completed", 
+                JOptionPane.INFORMATION_MESSAGE);
+            dispose();
+            return;
+        }
+
         if (!TopicManager.getInstance().hasValidTopic()) {
             JOptionPane.showMessageDialog(this, 
                 "Please select a topic first!", 

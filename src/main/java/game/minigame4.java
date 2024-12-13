@@ -59,6 +59,15 @@ public class minigame4 extends JFrame implements Minigame {
 
     @Override
     public void start() {
+        if (MinigameManager.getInstance().isMinigameCompleted(minigame4.class)) {
+            JOptionPane.showMessageDialog(null, 
+                "You have already completed this minigame!", 
+                "Already Completed", 
+                JOptionPane.INFORMATION_MESSAGE);
+            dispose();
+            return;
+        }
+
         if (!TopicManager.getInstance().hasValidTopic()) {
             JOptionPane.showMessageDialog(null, 
                 "You found a landmark! Please talk to an available NPC to select a topic first.");
@@ -95,7 +104,8 @@ public class minigame4 extends JFrame implements Minigame {
     private void checkAnswer() {
         String userAnswer = answerField.getText().trim().toLowerCase();
         if (userAnswer.equals(answer.toLowerCase())) {
-            JOptionPane.showMessageDialog(this, "Correct!");
+            MinigameManager.getInstance().markMinigameCompleted(minigame4.class);
+            JOptionPane.showMessageDialog(this, "Correct!\nMinigame completed successfully!");
             dispose();
         } else {
             JOptionPane.showMessageDialog(this, "Incorrect! Try again.");
