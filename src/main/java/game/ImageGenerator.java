@@ -41,14 +41,38 @@ public class ImageGenerator {
         }
         
         String topic = topicManager.getTopic();
-        String prompt = "Picture of " + topic;
+        String singularTopic = toSingular(topic);
+        String prompt = "Picture of " + singularTopic;
         
         String filename = "landmark.png";
-        System.out.println("Generating landmark image for topic: " + topic);
+        System.out.println("Generating landmark image for topic: " + singularTopic);
         String fullPath = generateImage(prompt, filename);
         Landmark.updateLandmark(fullPath);
-        System.out.println("Landmark image generation and update completed");
+        
+        // Delete the file after it's been set
+        new File(fullPath).delete();
+        System.out.println("Landmark image generation completed and temporary file cleaned up");
         return filename;
+    }
+
+    private static String toSingular(String word) {
+        if (word == null || word.isEmpty()) return word;
+        
+        // Common plural endings
+        if (word.endsWith("ies")) {
+            return word.substring(0, word.length() - 3) + "y";
+        } else if (word.endsWith("es")) {
+            // Special cases for -es
+            if (word.endsWith("ches") || word.endsWith("shes") || 
+                word.endsWith("sses") || word.endsWith("xes")) {
+                return word.substring(0, word.length() - 2);
+            }
+            return word.substring(0, word.length() - 1);
+        } else if (word.endsWith("s") && !word.endsWith("ss")) {
+            return word.substring(0, word.length() - 1);
+        }
+        
+        return word;
     }
 
     private static String generateImage(String prompt, String filename) throws IOException {
