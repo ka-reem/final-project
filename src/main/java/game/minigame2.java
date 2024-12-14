@@ -1,3 +1,4 @@
+// Multiple Choice Quiz minigame
 package game;
 
 import javax.swing.*;

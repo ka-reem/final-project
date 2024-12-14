@@ -26,8 +26,8 @@ public class ChatPanel extends JPanel {
     private static final Color CHAT_BG_COLOR = new Color(30, 30, 30, 180); 
     private static final Color CHAT_AREA_BG = new Color(255, 255, 255, 10);
     private static final Color INPUT_BG = new Color(255, 255, 255, 20);
-    private static final Color USER_TEXT_COLOR = new Color(255, 255, 255); // Not working properly
-    private static final Color BOT_TEXT_COLOR = new Color(200, 200, 200);             // Black for AI text
+    private static final Color USER_TEXT_COLOR = new Color(255, 255, 255);    // White for user text
+    private static final Color BOT_TEXT_COLOR = new Color(255, 255, 255);     // White for bot text
     private static final Font CHAT_FONT = new Font("SansSerif", Font.PLAIN, 14);
     private static final int BUBBLE_RADIUS = 15;
     private static final int BUBBLE_PADDING = 10;
@@ -212,24 +212,24 @@ public class ChatPanel extends JPanel {
         }
 
         return String.format(
-            "You are a knowledgeable guide helping someone learn about %s. Current context:\n" +
+            "You are a mystical desert guide helping travelers uncover the secrets of %s. Current context:\n" +
             "Quest Progress: %d/5 completed\n" +
             "Last location: %s\n" +
             "User input: %s\n\n" +
             "Instructions:\n" +
-            "1. Connect learning tasks to desert landmarks\n" +
-            "2. Make learning fun and adventurous\n" +
-            "3. Give clear directions to next location\n" +
-            "4. Include interesting facts about %s with each quest\n" +
-            "5. Keep responses under 30 words\n" +
-            // "6. Use emojis and engaging language" + // No emojis due to LMNT integration
+            "1. Describe magical desert landmarks that represent concepts from %s\n" +
+            "2. Hint at mysterious games and challenges that await at each landmark\n" +
+            "3. Give directions using desert landmarks (dunes, oases, ancient ruins)\n" +
+            "4. Weave interesting facts about %s into the desert adventure narrative\n" +
+            "5. Keep responses under 30 words and maintain a sense of mystery and discovery\n" +
+            "6. Make each landmark feel unique and connected to what they're learning\n" +
             "DO NOT HALLUCINATE, DO NOT MAKE THINGS UP",
-
             
-            learningTopic, // Learning topic takes entire sentence and not a word. Specify this to user. 
+            learningTopic,
             getCompletedQuestCount(),
             getCurrentLocation(),
             userInput,
+            learningTopic,
             learningTopic
         );
     }
@@ -272,13 +272,16 @@ public class ChatPanel extends JPanel {
 
                 try {
                     String summaryPrompt = "You are helping someone learn about: " + extractedTopic + 
-                                         "\nProvide an encouraging 1-2 sentence response that:" +
+                                         "\nProvide an encouraging response that:" +
                                          "\n1. Confirms the topic" +
                                          "\n2. Shows enthusiasm for teaching it" +
-                                         "\n3. Asks if they're ready to begin";
+                                         "\n3. Tells them to look around the map for the first landmark" +
+                                         "\n4. Reminds them they can talk to you anytime using the toggle chat button in the top left corner or by interacting with you" +
+                                         "\n5. Asks if they're ready to begin";
                     
                     String response = groqClient.generateResponse(summaryPrompt);
                     appendToChat("\nGuide: " + response + "\n");
+                    generateAndPlaySpeech(response); // Add this line to enable text-to-speech for the summary
                 } catch (Exception e) {
                     appendToChat("\nError generating topic summary: " + e.getMessage());
                 }

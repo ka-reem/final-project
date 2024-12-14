@@ -15,6 +15,11 @@ public class minigame4 extends JFrame implements Minigame {
     private JTextField answerField;
     private JLabel sentenceLabel;
 
+    private static final Font TITLE_FONT = new Font("Arial", Font.BOLD, 20);
+    private static final Font CONTENT_FONT = new Font("Arial", Font.PLAIN, 16);
+    private static final Color BACKGROUND_COLOR = new Color(245, 245, 245);
+    private static final Color ACCENT_COLOR = new Color(70, 130, 180);
+
     public minigame4() {
         initializeGroqClient();
         setupUI();
@@ -34,27 +39,55 @@ public class minigame4 extends JFrame implements Minigame {
 
     private void setupUI() {
         setTitle("Fill in the Blanks");
-        setSize(500, 300);
+        setSize(600, 300);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLocationRelativeTo(null);
 
-        JPanel panel = new JPanel();
-        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-        panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        JPanel mainPanel = new JPanel();
+        mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
+        mainPanel.setBorder(BorderFactory.createEmptyBorder(30, 40, 30, 40));
+        mainPanel.setBackground(BACKGROUND_COLOR);
 
+        // Title
+        JLabel titleLabel = new JLabel("Complete the Sentence");
+        titleLabel.setFont(TITLE_FONT);
+        titleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        // Sentence label
         sentenceLabel = new JLabel();
-        answerField = new JTextField(20);
-        JButton submit = new JButton("Submit");
-        
-        submit.addActionListener(e -> checkAnswer());
-        
-        panel.add(sentenceLabel);
-        panel.add(Box.createRigidArea(new Dimension(0, 10)));
-        panel.add(answerField);
-        panel.add(Box.createRigidArea(new Dimension(0, 10)));
-        panel.add(submit);
+        sentenceLabel.setFont(CONTENT_FONT);
+        sentenceLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        add(panel);
+        // Answer field panel
+        JPanel answerPanel = new JPanel();
+        answerPanel.setLayout(new FlowLayout(FlowLayout.CENTER));
+        answerPanel.setBackground(BACKGROUND_COLOR);
+        
+        answerField = new JTextField(15);
+        answerField.setFont(CONTENT_FONT);
+        answerField.setPreferredSize(new Dimension(200, 30));
+
+        // Submit button
+        JButton submit = new JButton("Submit");
+        submit.setFont(CONTENT_FONT);
+        submit.setBackground(ACCENT_COLOR);
+        submit.setForeground(Color.WHITE);
+        submit.setFocusPainted(false);
+        submit.setBorder(BorderFactory.createEmptyBorder(5, 15, 5, 15));
+        submit.setAlignmentX(Component.CENTER_ALIGNMENT);
+        submit.addActionListener(e -> checkAnswer());
+
+        answerPanel.add(answerField);
+
+        mainPanel.add(titleLabel);
+        mainPanel.add(Box.createRigidArea(new Dimension(0, 20)));
+        mainPanel.add(sentenceLabel);
+        mainPanel.add(Box.createRigidArea(new Dimension(0, 20)));
+        mainPanel.add(answerPanel);
+        mainPanel.add(Box.createRigidArea(new Dimension(0, 15)));
+        mainPanel.add(submit);
+
+        add(mainPanel);
     }
 
     @Override
