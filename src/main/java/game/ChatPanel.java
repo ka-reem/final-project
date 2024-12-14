@@ -33,6 +33,7 @@ public class ChatPanel extends JPanel {
     private static final int BUBBLE_PADDING = 10;
     private int audioCounter = 0;
     private ExecutorService audioExecutor = Executors.newSingleThreadExecutor();
+    private boolean isMuted = false;
 
     private GroqClient groqClient;
     private JTextPane chatArea;
@@ -461,7 +462,21 @@ public class ChatPanel extends JPanel {
         return learningTopic;
     }
 
+    public void toggleMute() {
+        isMuted = !isMuted;
+        if (isMuted) {
+            // Stop any currently playing audio
+            audioExecutor.shutdownNow();
+            audioExecutor = Executors.newSingleThreadExecutor();
+        }
+    }
+
+    public boolean isMuted() {
+        return isMuted;
+    }
+
     private void generateAndPlaySpeech(String text) {
+        if (isMuted) return;
         try {
             // Create audio directory if it doesn't exist
             new File(AUDIO_DIR).mkdirs();

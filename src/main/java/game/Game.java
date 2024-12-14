@@ -71,12 +71,18 @@ public class Game extends JFrame {
         toolbar.setOpaque(false);
         JButton backButton = new JButton("Back to Menu");
         JButton toggleChatButton = new JButton("Toggle Chat");
+        JButton muteButton = new JButton("Speech: On"); // Changed initial text
         
         backButton.addActionListener(e -> returnToMenu());
         toggleChatButton.addActionListener(e -> toggleChat());
+        muteButton.addActionListener(e -> {
+            chatPanel.toggleMute();
+            muteButton.setText(chatPanel.isMuted() ? "Speech: Off" : "Speech: On");
+        }); // Add mute action
         
         toolbar.add(backButton);
         toolbar.add(toggleChatButton);
+        toolbar.add(muteButton); // Add button to toolbar
         
         // Initialize component bounds with proper sizes
         gameWorld.setBounds(0, 0, width, height);
