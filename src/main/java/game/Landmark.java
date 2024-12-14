@@ -4,6 +4,8 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import javax.imageio.ImageIO;
 import java.io.IOException;
+import java.io.File;
+import java.io.InputStream;
 
 public class Landmark extends InteractiveObject {
     private Minigame minigame;
@@ -25,37 +27,69 @@ public class Landmark extends InteractiveObject {
 
     @Override
     public void update() {
-        // Try to load the landmark image if it exists
-        try {
-            BufferedImage newSprite = loadLandmarkSprite();
-            if (newSprite != null && newSprite != this.sprite) {
-                this.sprite = newSprite;
-                // Update hitbox for new sprite size
-                this.hitbox = new Rectangle((int)x, (int)y, sprite.getWidth(), sprite.getHeight());
-            }
-        } catch (Exception e) {
-            // If image isn't available yet, keep using default sprite
+        BufferedImage newSprite = loadLandmarkSprite();
+        if (newSprite != null && !newSprite.equals(this.sprite)) {
+            this.sprite = newSprite;
+            this.hitbox = new Rectangle((int)x, (int)y, sprite.getWidth(), sprite.getHeight());
+            // Use GameWorld instead of GamePanel for repainting
+            GameWorld.getInstance().repaint();
         }
     }
 
     private static BufferedImage loadLandmarkSprite() {
         try {
-            BufferedImage originalImage = ImageIO.read(Landmark.class.getResourceAsStream("/landmark.png"));
-            if (originalImage == null) return null;
-
-            int newWidth = 128;
-            int newHeight = 128;
-            
-            BufferedImage scaledImage = new BufferedImage(newWidth, newHeight, BufferedImage.TYPE_INT_ARGB);
-            Graphics2D g2d = scaledImage.createGraphics();
-            g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-            g2d.drawImage(originalImage, 0, 0, newWidth, newHeight, null);
-            g2d.dispose();
-            
-            return scaledImage;
+            String resourcePath = "/landmark.png";
+            InputStream is = Landmark.class.getResourceAsStream(resourcePath);
+            if (is != null) {
+                BufferedImage originalImage = ImageIO.read(is);
+                is.close();
+                return scaleImage(originalImage);
+            }
+            return defaultSprite;
         } catch (IOException e) {
-            return null; // Return null instead of throwing exception
+            System.err.println("Error loading landmark sprite: " + e.getMessage());
+            return defaultSprite;
         }
+    }
+
+    private static BufferedImage scaleImage(BufferedImage original) {
+        int newWidth = 128;
+        int newHeight = 128;
+        
+        BufferedImage scaledImage = new BufferedImage(newWidth, newHeight, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g2d = scaledImage.createGraphics();
+        g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+        g2d.drawImage(original, 0, 0, newWidth, newHeight, null);
+        g2d.dispose();
+        
+        return scaledImage;
+    }
+
+    public static void updateLandmark(String imagePath) {
+        try {
+            // Read the new image
+            BufferedImage newImage = ImageIO.read(new File(imagePath));
+            if (newImage != null) {
+                BufferedImage scaledImage = scaleImage(newImage);
+                
+                // Save to resources directory
+                File resourceFile = new File("src/main/resources/landmark.png");
+                ImageIO.write(scaledImage, "PNG", resourceFile);
+                
+                // Force reload sprite and trigger game world update
+                defaultSprite = scaledImage;
+                GameWorld.getInstance().reloadGameObjects();
+                
+                System.out.println("Landmark image updated successfully");
+            }
+        } catch (IOException e) {
+            System.err.println("Error updating landmark sprite: " + e.getMessage());
+        }
+    }
+
+    public void forceReload() {
+        this.sprite = loadLandmarkSprite();
+        this.hitbox = new Rectangle((int)x, (int)y, sprite.getWidth(), sprite.getHeight());
     }
 
     @Override

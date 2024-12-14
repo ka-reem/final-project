@@ -41,18 +41,17 @@ public class ImageGenerator {
         }
         
         String topic = topicManager.getTopic();
-        String prompt = "Picture of " + topic; 
-                    //    ", suitable as a point of interest on a fantasy map";
+        String prompt = "Picture of " + topic;
         
-        // Use consistent filename format
         String filename = "landmark.png";
         System.out.println("Generating landmark image for topic: " + topic);
-        generateImage(prompt, filename);
-        System.out.println("Landmark image generation completed");
+        String fullPath = generateImage(prompt, filename);
+        Landmark.updateLandmark(fullPath);
+        System.out.println("Landmark image generation and update completed");
         return filename;
     }
 
-    private static void generateImage(String prompt, String filename) throws IOException {
+    private static String generateImage(String prompt, String filename) throws IOException {
         // Delete existing file if it exists
         File outputFile = new File(RESOURCES_PATH + filename);
         if (outputFile.exists()) {
@@ -110,6 +109,7 @@ public class ImageGenerator {
             if (!file.exists()) {
                 throw new IOException("File was not created successfully");
             }
+            return fullPath;
         }
     }
 }

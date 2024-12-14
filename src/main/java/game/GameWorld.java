@@ -12,6 +12,8 @@ import java.awt.event.ActionEvent;
 import java.awt.geom.AffineTransform;
 
 public class GameWorld extends JPanel implements Runnable {
+    // Add static instance
+    private static GameWorld instance;
 
     private BufferedImage world;
     private BufferedImage mapBackground; 
@@ -46,6 +48,7 @@ public class GameWorld extends JPanel implements Runnable {
     private double scaleY = 1.0;
 
     public GameWorld(Game game) {
+        instance = this; // Set instance in constructor
         this.game = game;
         this.frame = game;
         viewport = new Rectangle(0, 0, GameConstants.GAME_SCREEN_WIDTH, GameConstants.GAME_SCREEN_HEIGHT);
@@ -423,5 +426,21 @@ public class GameWorld extends JPanel implements Runnable {
             (int)(original.x / scaleX),
             (int)(original.y / scaleY)
         );
+    }
+
+    public void reloadGameObjects() {
+        // Force reload of all landmarks
+        if (landmark1 != null) landmark1.forceReload();
+        if (landmark2 != null) landmark2.forceReload();
+        if (landmark3 != null) landmark3.forceReload();
+        if (landmark4 != null) landmark4.forceReload();
+        
+        // Request repaint
+        repaint(); // Use this.repaint() since GameWorld extends JPanel
+    }
+    
+    // Make this accessible to Landmark
+    public static GameWorld getInstance() {
+        return instance;
     }
 }
