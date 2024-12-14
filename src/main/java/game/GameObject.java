@@ -1,4 +1,3 @@
-
 package game;
 
 import java.awt.*;
@@ -31,7 +30,26 @@ public abstract class GameObject {
         updateHitbox();
     }
     
+    public Rectangle getHitbox() { 
+        return hitbox; 
+    }
+
     protected void updateHitbox() {
+        // Update hitbox to exactly match the object's position
         hitbox.setLocation((int)x, (int)y);
+    }
+
+    public int getWidth() {
+        return sprite.getWidth();
+    }
+
+    public int getHeight() {
+        return sprite.getHeight();
+    }
+
+    public void setPosition(float x, float y) {
+        this.x = x;
+        this.y = y;
+        updateHitbox();
     }
 }

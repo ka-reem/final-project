@@ -226,18 +226,18 @@ public class GameWorld extends JPanel implements Runnable {
             System.out.println("Resource URL: " + resourceUrl);
             BufferedImage originalImg = ImageIO.read(Objects.requireNonNull(resourceUrl));
             
-            // Increase sprite size to 40x40
-            t1img = new BufferedImage(120, 120, BufferedImage.TYPE_INT_ARGB);
+            // Change sprite size to 40x40 (smaller than before)
+            t1img = new BufferedImage(40, 40, BufferedImage.TYPE_INT_ARGB);
             Graphics2D g2d = t1img.createGraphics();
             g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-            g2d.drawImage(originalImg, 0, 0, 120, 120, null);
+            g2d.drawImage(originalImg, 0, 0, 40, 40, null);
             g2d.dispose();
             
         } catch (Exception ex) {
             System.out.println("Error loading tank1.png: " + ex.getMessage());
             ex.printStackTrace();
-            // Default larger image if loading fails
-            t1img = new BufferedImage(120, 120, BufferedImage.TYPE_INT_RGB);
+            // Default smaller image if loading fails
+            t1img = new BufferedImage(40, 40, BufferedImage.TYPE_INT_RGB);
         }
 
         // Center the tank by accounting for its size
@@ -373,6 +373,15 @@ public class GameWorld extends JPanel implements Runnable {
         this.landmark3.draw((Graphics2D)buffer);
         this.landmark4.draw((Graphics2D)buffer);
         
+        // After drawing all game objects, draw debug hitboxes with viewport adjustment
+        if (t1 != null) {
+            Graphics2D g2d = (Graphics2D) buffer;
+            g2d.setColor(Color.RED);
+            g2d.setStroke(new BasicStroke(1.0f));
+            Rectangle hitbox = t1.getHitbox();
+            g2d.drawRect((int)t1.getX(), (int)t1.getY(), hitbox.width, hitbox.height);
+        }
+
         buffer.setTransform(old);
         buffer.dispose();
         
@@ -382,12 +391,10 @@ public class GameWorld extends JPanel implements Runnable {
 
     // Update player movement to account for scrolling
     public void updatePlayerPosition(Player player) {
-        // Keep player within map bounds
-        float newX = Math.max(viewportX, Math.min(player.getX(), viewportX + viewport.width - player.getWidth()));
-        float newY = Math.max(viewportY, Math.min(player.getY(), viewportY + viewport.height - player.getHeight()));
-        player.setPosition(newX, newY);
+        // Remove viewport bounds checking to allow free movement
+        player.setPosition(player.getX(), player.getY());
         
-        // Scroll if player is near edges 
+        // Update viewport to follow player
         if (player.getX() < viewportX + 100) scrollViewport(-SCROLL_SPEED, 0);
         if (player.getX() > viewportX + viewport.width - 100) scrollViewport(SCROLL_SPEED, 0);
         if (player.getY() < viewportY + 100) scrollViewport(0, -SCROLL_SPEED);
