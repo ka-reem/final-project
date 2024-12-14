@@ -99,17 +99,25 @@ public class ImageGenerator {
             }
         }
 
-        // Modified image saving code with explicit file creation
+        // Modified image saving code
         try (InputStream in = conn.getInputStream()) {
-            String fullPath = RESOURCES_PATH + filename;
-            File file = new File(fullPath);
-            Files.copy(in, file.toPath());
-            System.out.println("Successfully saved landmark image to: " + fullPath);
+            String resourcePath = "src/main/resources/" + filename;
+            File resourceFile = new File(resourcePath);
             
-            if (!file.exists()) {
-                throw new IOException("File was not created successfully");
+            // Ensure parent directories exist
+            resourceFile.getParentFile().mkdirs();
+            
+            // Save directly to resources
+            try (FileOutputStream fos = new FileOutputStream(resourceFile)) {
+                byte[] buffer = new byte[8192];
+                int bytesRead;
+                while ((bytesRead = in.read(buffer)) != -1) {
+                    fos.write(buffer, 0, bytesRead);
+                }
             }
-            return fullPath;
+            
+            System.out.println("Successfully saved landmark image to: " + resourcePath);
+            return resourcePath;
         }
     }
 }

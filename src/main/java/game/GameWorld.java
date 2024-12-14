@@ -271,28 +271,8 @@ public class GameWorld extends JPanel implements Runnable {
         npc1 = new NPC(GameConstants.GAME_SCREEN_WIDTH / 4f, GameConstants.GAME_SCREEN_HEIGHT / 3f, npc1Img, "Hello!");
         npc2 = new NPC(GameConstants.GAME_SCREEN_WIDTH * 3f / 4f, GameConstants.GAME_SCREEN_HEIGHT * 2f / 3f, npc2Img, "Welcome!");
 
-        // Create different colored landmarks
-        BufferedImage landmarkImg1 = createLandmarkImage(Color.YELLOW);
-        BufferedImage landmarkImg2 = createLandmarkImage(Color.GREEN);
-        BufferedImage landmarkImg3 = createLandmarkImage(Color.BLUE);
-        BufferedImage landmarkImg4 = createLandmarkImage(Color.RED);
-
-        // Create landmarks with different minigames
-        landmark1 = new Landmark(GameConstants.GAME_SCREEN_WIDTH / 4f, 
-                               GameConstants.GAME_SCREEN_HEIGHT / 4f, 
-                               landmarkImg1, new minigame1());
-        
-        landmark2 = new Landmark(GameConstants.GAME_SCREEN_WIDTH * 3f / 4f, 
-                               GameConstants.GAME_SCREEN_HEIGHT / 4f, 
-                               landmarkImg2, new minigame2());
-        
-        landmark3 = new Landmark(GameConstants.GAME_SCREEN_WIDTH / 4f, 
-                               GameConstants.GAME_SCREEN_HEIGHT * 3f / 4f, 
-                               landmarkImg3, new minigame3());
-        
-        landmark4 = new Landmark(GameConstants.GAME_SCREEN_WIDTH * 3f / 4f, 
-                               GameConstants.GAME_SCREEN_HEIGHT * 3f / 4f, 
-                               landmarkImg4, new minigame4());
+        // Replace the old landmark creation code with the new method
+        createLandmarks();
 
         // Setup controls
         PlayerControl tc1 = new PlayerControl(t1, KeyEvent.VK_W, KeyEvent.VK_S, KeyEvent.VK_A, KeyEvent.VK_D, KeyEvent.VK_SPACE);
@@ -328,6 +308,46 @@ public class GameWorld extends JPanel implements Runnable {
         g2d.fillOval(0, 0, 30, 30);
         g2d.dispose();
         return img;
+    }
+
+    private void createLandmarks() {
+        // Create different colored landmarks
+        BufferedImage landmarkImg1 = createLandmarkImage(Color.YELLOW);
+        BufferedImage landmarkImg2 = createLandmarkImage(Color.GREEN);
+        BufferedImage landmarkImg3 = createLandmarkImage(Color.BLUE);
+        BufferedImage landmarkImg4 = createLandmarkImage(Color.RED);
+
+        // Get map dimensions for random positioning
+        int mapWidth = mapBackground.getWidth();
+        int mapHeight = mapBackground.getHeight();
+        
+        // Add padding to keep landmarks away from edges
+        int padding = 100;
+        
+        // Create landmarks with random positions
+        landmark1 = new Landmark(
+            padding + (float)(Math.random() * (mapWidth - 2*padding)),
+            padding + (float)(Math.random() * (mapHeight - 2*padding)),
+            landmarkImg1, new minigame1()
+        );
+        
+        landmark2 = new Landmark(
+            padding + (float)(Math.random() * (mapWidth - 2*padding)),
+            padding + (float)(Math.random() * (mapHeight - 2*padding)),
+            landmarkImg2, new minigame2()
+        );
+        
+        landmark3 = new Landmark(
+            padding + (float)(Math.random() * (mapWidth - 2*padding)),
+            padding + (float)(Math.random() * (mapHeight - 2*padding)),
+            landmarkImg3, new minigame3()
+        );
+        
+        landmark4 = new Landmark(
+            padding + (float)(Math.random() * (mapWidth - 2*padding)),
+            padding + (float)(Math.random() * (mapHeight - 2*padding)),
+            landmarkImg4, new minigame4()
+        );
     }
 
     @Override

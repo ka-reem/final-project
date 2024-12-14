@@ -14,6 +14,8 @@ public class minigame4 extends JFrame implements Minigame {
     private String answer;
     private JTextField answerField;
     private JLabel sentenceLabel;
+    private String[] hints;
+    private int currentHintIndex = 0;
 
     private static final Font TITLE_FONT = new Font("Arial", Font.BOLD, 20);
     private static final Font CONTENT_FONT = new Font("Arial", Font.PLAIN, 16);
@@ -66,18 +68,38 @@ public class minigame4 extends JFrame implements Minigame {
         answerField = new JTextField(15);
         answerField.setFont(CONTENT_FONT);
         answerField.setPreferredSize(new Dimension(200, 30));
+        // Add enter key listener
+        answerField.addActionListener(e -> checkAnswer());
 
-        // Submit button
+        // Submit button with updated styling
         JButton submit = new JButton("Submit");
         submit.setFont(CONTENT_FONT);
-        submit.setBackground(ACCENT_COLOR);
-        submit.setForeground(Color.WHITE);
+        submit.setBackground(new Color(135, 206, 250));  // Light sky blue
+        submit.setForeground(Color.BLACK);
         submit.setFocusPainted(false);
-        submit.setBorder(BorderFactory.createEmptyBorder(5, 15, 5, 15));
-        submit.setAlignmentX(Component.CENTER_ALIGNMENT);
+        submit.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(70, 130, 180), 2),
+            BorderFactory.createEmptyBorder(5, 15, 5, 15)
+        ));
+        submit.setPreferredSize(new Dimension(100, 35));
         submit.addActionListener(e -> checkAnswer());
 
+        // Hint button with updated styling
+        JButton hintButton = new JButton("Get Hint");
+        hintButton.setFont(CONTENT_FONT);
+        hintButton.setBackground(new Color(176, 224, 230));  // Powder blue
+        hintButton.setForeground(Color.BLACK);
+        hintButton.setFocusPainted(false);
+        hintButton.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(70, 130, 180), 2),
+            BorderFactory.createEmptyBorder(5, 15, 5, 15)
+        ));
+        hintButton.setPreferredSize(new Dimension(100, 35));
+        hintButton.addActionListener(e -> showHint());
+
         answerPanel.add(answerField);
+        answerPanel.add(submit);
+        answerPanel.add(hintButton);  // Add hint button
 
         mainPanel.add(titleLabel);
         mainPanel.add(Box.createRigidArea(new Dimension(0, 20)));
@@ -85,9 +107,30 @@ public class minigame4 extends JFrame implements Minigame {
         mainPanel.add(Box.createRigidArea(new Dimension(0, 20)));
         mainPanel.add(answerPanel);
         mainPanel.add(Box.createRigidArea(new Dimension(0, 15)));
-        mainPanel.add(submit);
 
         add(mainPanel);
+    }
+
+    private void showHint() {
+        if (hints == null || hints.length == 0) {
+            JOptionPane.showMessageDialog(this, 
+                "Think about the context of the sentence", 
+                "Hint", 
+                JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+
+        String hint = hints[currentHintIndex];
+        JOptionPane.showMessageDialog(this, 
+            String.format("Hint %d/%d:\n%s", 
+                currentHintIndex + 1, 
+                hints.length, 
+                hint), 
+            "Hint", 
+            JOptionPane.INFORMATION_MESSAGE);
+        
+        // Move to next hint
+        currentHintIndex = (currentHintIndex + 1) % hints.length;
     }
 
     @Override
@@ -121,14 +164,18 @@ public class minigame4 extends JFrame implements Minigame {
     private void generateContent() throws IOException {
         String topic = TopicManager.getInstance().getTopic();
         String prompt = String.format(
-            "Generate a fill-in-the-blank sentence about %s. Format as JSON:\n" +
+            "Generate a fill-in-the-blank sentence about %s with three helpful hints. Format as JSON:\n" +
             "{\n" +
             "  \"sentence\": \"Complete sentence with ___ for blank\",\n" +
-            "  \"answer\": \"correct word for blank\"\n" +
+            "  \"answer\": \"correct word for blank\",\n" +
+            "  \"hints\": [\n" +
+            "    \"First basic hint\",\n" +
+            "    \"More specific second hint\",\n" +
+            "    \"Very specific third hint (but don't reveal the answer)\"\n" +
+            "  ]\n" +
             "}\n", topic);
 
         String response = groqClient.generateResponse(prompt);
-        // Clean the response if needed
         response = response.trim();
         parseContent(response);
         sentenceLabel.setText("<html>" + sentence + "</html>");
@@ -141,7 +188,7 @@ public class minigame4 extends JFrame implements Minigame {
             JOptionPane.showMessageDialog(this, "Correct!\nMinigame completed successfully!");
             dispose();
         } else {
-            JOptionPane.showMessageDialog(this, "Incorrect! Try again.");
+            JOptionPane.showMessageDialog(this, "Incorrect! Try again or use the hint button.");
             answerField.setText("");
             answerField.requestFocus();
         }
@@ -153,11 +200,14 @@ public class minigame4 extends JFrame implements Minigame {
             JsonObject json = gson.fromJson(response, JsonObject.class);
             sentence = json.get("sentence").getAsString();
             answer = json.get("answer").getAsString();
+            hints = gson.fromJson(json.get("hints"), String[].class);
+            currentHintIndex = 0;
         } catch (Exception e) {
             e.printStackTrace();
             // Fallback content
             sentence = "Complete sentence with ___ for blank";
             answer = "correct";
+            hints = new String[]{"Try to think about the context of the sentence"};
         }
     }
 }
