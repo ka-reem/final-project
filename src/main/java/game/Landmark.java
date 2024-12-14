@@ -21,8 +21,9 @@ public class Landmark extends InteractiveObject {
     }
 
     public Landmark(float x, float y, BufferedImage sprite, Minigame minigame) {
-        super(x, y, defaultSprite); // Start with default sprite
+        super(x, y, defaultSprite);
         this.minigame = minigame;
+        this.hitbox = new Rectangle((int)x, (int)y, 128, 128); // Set to scaled image size
     }
 
     @Override
@@ -30,8 +31,7 @@ public class Landmark extends InteractiveObject {
         BufferedImage newSprite = loadLandmarkSprite();
         if (newSprite != null && !newSprite.equals(this.sprite)) {
             this.sprite = newSprite;
-            this.hitbox = new Rectangle((int)x, (int)y, sprite.getWidth(), sprite.getHeight());
-            // Use GameWorld instead of GamePanel for repainting
+            // Remove hitbox update as it's fixed size
             GameWorld.getInstance().repaint();
         }
     }
@@ -89,7 +89,7 @@ public class Landmark extends InteractiveObject {
 
     public void forceReload() {
         this.sprite = loadLandmarkSprite();
-        this.hitbox = new Rectangle((int)x, (int)y, sprite.getWidth(), sprite.getHeight());
+        // Remove redundant hitbox update
     }
 
     @Override

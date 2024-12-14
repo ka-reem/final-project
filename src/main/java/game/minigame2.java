@@ -185,12 +185,12 @@ public class minigame2 extends JFrame implements Minigame {
 
     private void handleSubmit() {
         boolean answered = false;
+        int selectedAnswer = -1;
+        
         for (int i = 0; i < radioButtons.length; i++) {
             if (radioButtons[i].isSelected()) {
                 answered = true;
-                if (i == answers.get(currentQuestion)) {
-                    score++;
-                }
+                selectedAnswer = i;
                 break;
             }
         }
@@ -200,19 +200,25 @@ public class minigame2 extends JFrame implements Minigame {
             return;
         }
 
-        currentQuestion++;
-        if (currentQuestion < questions.size()) {
-            showCurrentQuestion();
-        } else {
-            if (score >= questions.size() / 2) { // Pass if at least 50% correct
+        if (selectedAnswer == answers.get(currentQuestion)) {
+            score++;
+            JOptionPane.showMessageDialog(this, "Correct! Moving to next question.");
+            currentQuestion++;
+            if (currentQuestion < questions.size()) {
+                showCurrentQuestion();
+            } else {
                 MinigameManager.getInstance().markMinigameCompleted(minigame2.class);
                 JOptionPane.showMessageDialog(this, 
-                    String.format("Quiz completed! Score: %d/%d\nMinigame completed successfully!", score, questions.size()));
-            } else {
-                JOptionPane.showMessageDialog(this, 
-                    String.format("Quiz completed! Score: %d/%d\nTry again to complete the minigame.", score, questions.size()));
+                    String.format("Quiz completed! Score: %d/%d\nMinigame completed successfully!", 
+                    score, questions.size()));
+                dispose();
             }
-            dispose();
+        } else {
+            JOptionPane.showMessageDialog(this, 
+                "Incorrect! Try this question again.", 
+                "Wrong Answer", 
+                JOptionPane.WARNING_MESSAGE);
+            buttonGroup.clearSelection();
         }
     }
 }

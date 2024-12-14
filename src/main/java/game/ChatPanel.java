@@ -56,6 +56,7 @@ public class ChatPanel extends JPanel {
         initializeComponents();
         setupListeners();
         // startChat(); // Commented out - chat will start through NPC interaction instead
+        MinigameManager.getInstance().setChatPanel(this);
     }
 
     private void initializeComponents() {
@@ -350,11 +351,33 @@ public class ChatPanel extends JPanel {
         }
     }
 
-    private void updateQuestProgress() {
-        int completed = getCompletedQuestCount();
-        if (completed == questsCompleted.length) {
-            appendToChat("🎉 Congratulations! You've completed all learning quests about " + 
-                learningTopic + "! Would you like to review what you've learned?");
+    public void updateQuestProgress() {
+        if (MinigameManager.getInstance().areAllMinigamesCompleted()) {
+            try {
+                String completionPrompt = String.format(
+                    "Generate a congratulatory message for someone who just completed learning about %s. The message should:\n" +
+                    "1. Congratulate them on completing all games/challenges\n" +
+                    "2. Acknowledge their mastery of the concepts\n" +
+                    "3. Encourage them to ask questions about what they learned\n" +
+                    "4. Mention they can reload the game to learn a new topic\n" +
+                    "Keep the tone friendly and enthusiastic!", 
+                    learningTopic
+                );
+                
+                String completionMessage = groqClient.generateResponse(completionPrompt);
+                appendToChat("\nGuide: " + completionMessage);
+                generateAndPlaySpeech(completionMessage);
+            } catch (Exception e) {
+                // Fallback to default message if Groq fails
+                String defaultMessage = String.format(
+                    "🎉 Congratulations on completing all the games about %s! " +
+                    "You've done an amazing job mastering these concepts through the interactive challenges. " +
+                    "Feel free to ask me any questions about what you've learned, " +
+                    "or you can reload the game to start learning a new topic!", 
+                    learningTopic);
+                appendToChat("\nGuide: " + defaultMessage);
+                generateAndPlaySpeech(defaultMessage);
+            }
         }
     }
 

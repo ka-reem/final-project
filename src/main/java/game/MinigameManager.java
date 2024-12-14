@@ -6,6 +6,8 @@ import java.util.Set;
 public class MinigameManager {
     private static MinigameManager instance;
     private Set<Class<? extends Minigame>> completedMinigames;
+    private static final int TOTAL_MINIGAMES = 4; // Update this number based on total minigames
+    private ChatPanel chatPanel;
 
     private MinigameManager() {
         completedMinigames = new HashSet<>();
@@ -18,10 +20,18 @@ public class MinigameManager {
         return instance;
     }
 
+    public void setChatPanel(ChatPanel chatPanel) {
+        this.chatPanel = chatPanel;
+    }
+
     public void markMinigameCompleted(Class<? extends Minigame> minigameClass) {
         completedMinigames.add(minigameClass);
         System.out.println("[DEBUG] Minigame completed: " + minigameClass.getSimpleName());
         System.out.println("[DEBUG] Current progress: " + toString());
+        
+        if (areAllMinigamesCompleted() && chatPanel != null) {
+            chatPanel.updateQuestProgress();
+        }
     }
 
     public boolean isMinigameCompleted(Class<? extends Minigame> minigameClass) {
@@ -38,6 +48,10 @@ public class MinigameManager {
     public int getCompletedCount() {
         System.out.println("[DEBUG] Total completed minigames: " + completedMinigames.size());
         return completedMinigames.size();
+    }
+
+    public boolean areAllMinigamesCompleted() {
+        return completedMinigames.size() >= TOTAL_MINIGAMES;
     }
 
     @Override
