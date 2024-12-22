@@ -10,7 +10,6 @@ import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 import javax.swing.text.*;
 import javax.sound.sampled.*;
-import javazoom.jl.player.Player;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.ExecutorService;
@@ -562,8 +561,11 @@ public class ChatPanel extends JPanel {
     private void playMP3(String filepath) {
         audioExecutor.submit(() -> {
             try (FileInputStream fis = new FileInputStream(filepath)) {
+                // Remove or comment out this block
+                /*
                 Player player = new Player(fis);
                 player.play();
+                */
                 // Only delete after playing is complete
                 new File(filepath).deleteOnExit();
             } catch (Exception e) {
