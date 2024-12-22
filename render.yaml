@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: your-game-name
+    env: static
+    buildCommand: ./gradlew build
+    staticPublishPath: ./build/libs
+    envVars:
+      - key: JAVA_VERSION
+        value: 17
+    packages:
+      - ncurses-bin  # This includes tput
