@@ -1,9 +1,14 @@
 services:
-  - type: web
+  - type: exec
     name: your-game-name
-    env: static
-    buildCommand: |
-      apt-get update && apt-get install -y ncurses-bin
-      npm install
-      npm run build
-    staticPublishPath: ./dist
+    env: java
+    buildCommand: ./gradlew build
+    startCommand: java -jar build/libs/*.jar
+    plan: free
+    runtime: java
+    runtimeVersion: "17"
+    buildFilter:
+      paths:
+      - build.gradle
+      - settings.gradle
+      - src/**
