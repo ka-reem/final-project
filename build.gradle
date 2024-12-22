@@ -26,33 +26,5 @@ application {
     mainClass = 'game.Game'
 }
 
-jar {
-    manifest {
-        attributes(
-            'Main-Class': 'game.Game',
-            'Class-Path': configurations.runtimeClasspath.collect { it.getName() }.join(' ')
-        )
-    }
-    
-    from {
-        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
-    }
-    
-    from('src/main/resources') {
-        include 'map.png'
-        include 'tank1.png'
-        include 'config.properties'
-    }
-    
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-}
-
-task release(type: Copy) {
-    dependsOn jar
-    from jar.archiveFile
-    from configurations.runtimeClasspath
-    into "$buildDir/release"
-}
-
 
 

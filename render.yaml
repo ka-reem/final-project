@@ -4,9 +4,6 @@ services:
     env: static
     buildCommand: |
       apt-get update && apt-get install -y ncurses-bin
-      chmod +x gradlew
-      ./gradlew build
-    staticPublishPath: ./build/libs
-    envVars:
-      - key: JAVA_VERSION
-        value: 17
+      npm install
+      npm run build
+    staticPublishPath: ./dist
