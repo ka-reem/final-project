@@ -1,6 +1,7 @@
 plugins {
     id 'java'
     id 'application'
+    id 'com.google.cloud.tools.appengine' version '2.4.0'
 }
 
 group 'com.yourgame'
@@ -24,6 +25,18 @@ dependencies {
 
 application {
     mainClass = 'game.Game'
+}
+
+appengine {
+    deploy {
+        version = 'v1'
+        projectId = 'GOOGLE_PROJECT_ID_HERE'
+    }
+}
+
+// Add webapp configuration
+webappConfiguration {
+    webappDirectory = file('src/main/webapp')
 }
 
 

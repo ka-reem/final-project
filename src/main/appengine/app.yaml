@@ -1,0 +1,12 @@
+runtime: java17
+instance_class: F1
+
+env_variables:
+  JAVA_TOOL_OPTIONS: "-XX:MaxRAM=256m"
+
+handlers:
+- url: /.*
+  script: auto
+  secure: always
+
+entrypoint: java -jar build/libs/final-project-1.0-SNAPSHOT.jar
