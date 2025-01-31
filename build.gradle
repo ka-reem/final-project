@@ -33,6 +33,3 @@ appengine {
         projectId = 'GOOGLE_PROJECT_ID'
     }
 }
-
-
-
